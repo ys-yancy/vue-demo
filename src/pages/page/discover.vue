@@ -6,12 +6,12 @@
 		<my-sliderImage></my-sliderImage>
 		<section class="content">
 			<ul>
-				<li>
+				<router-link to='/timeline' tag='li'>
 					<span class="account">投资圈</span>
 					<span class="desc-right">看高手怎么赚钱</span>
 					<span class="arrow-right"></span>
 					<span class="desc-right"></span>
-				</li>
+				</router-link>
 				<li>
 					<span class="account">朋友赚我也赚</span>
 					<span class="arrow-right"></span>

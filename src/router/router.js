@@ -17,6 +17,7 @@ import curretOrder from '../pages/page/curretOrder.vue';
 import historyOrder from '../pages/page/orderHistory.vue';
 import discover from '../pages/page/discover.vue';
 import my from '../pages/page/my.vue';
+import timeline from '../pages/page/timeline.vue';
 
 Vue.use(VueRouter);
 
@@ -72,6 +73,10 @@ const routes = [
         ]
     },
     { path: '/proTrading', component: proTrading,
+        children: [
+        ]
+    },
+    { path: '/timeline', component: timeline,
         children: [
         ]
     },
