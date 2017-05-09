@@ -18,6 +18,8 @@ import historyOrder from '../pages/page/orderHistory.vue';
 import discover from '../pages/page/discover.vue';
 import my from '../pages/page/my.vue';
 import timeline from '../pages/page/timeline.vue';
+import friend from '../pages/page/friends.vue';
+import newTrade from '../pages/page/newTrade.vue';
 
 Vue.use(VueRouter);
 
@@ -77,6 +79,14 @@ const routes = [
         ]
     },
     { path: '/timeline', component: timeline,
+        children: [
+        ]
+    },
+    { path: '/friend', component: friend,
+        children: [
+        ]
+    },
+    { path: '/newTrade', component: newTrade,
         children: [
         ]
     },

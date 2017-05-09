@@ -5,7 +5,7 @@
 	@touchmove="touchMove($event)"
 	@touchend="touchEnd($event)"
 	@scroll="(onInfinite || infiniteLoading) ? onScroll($event) : undefined">
-		<section class="inner" :style="{ transform: 'translate3d(0, ' + top/35 + 'rem, 0)' }">
+		<section class="inner" :style="{ transform: 'translate3d(1, ' + top/35 + 'rem, 1)' }">
 			<div class="pull-refresh">
 		        <slot name="pull-refresh">
 		          <!-- <span class="down-tip">下拉更新</span>
@@ -96,6 +96,7 @@
 	    		.height(80);
 				.line-height(80);
 	    		background: #ddd;
+	    		text-align: center;
 	    	}
 	    	.up-tip,
 	    	.down-tip,
@@ -121,7 +122,7 @@
 		    display: flex;
 		    align-items: center;
 		    justify-content: center;
-		    .margin-bottom(190);
+		    /*.margin-bottom(190);*/
 		    background: #1ABC9C;
 	    }
 	}
@@ -227,6 +228,11 @@
         		default: 80,
 			},
 
+			isSetWrapper: {
+				type: Boolean,
+		        default: false,
+			},
+
 			enableInfinite: {
 		        type: Boolean,
 		        default: true,
@@ -255,8 +261,15 @@
 		        this.startY = e.targetTouches[0].pageY;
 		        // 2017-5-6   兼容Stikty；
 		        // this.startScroll = this.$el.scrollTop || 0;
-
-		        this.startScroll = document.body.scrollTop || document.documentElement.scrollTop;
+		        /**
+				**  应该所有的滚动都由this.startScroll = this.$el.scrollTop || 0;处理
+				**  以后在做优化   friends.vue中写法正确
+		        **/
+		        if (this.isSetWrapper) {
+		        	this.startScroll = this.$el.scrollTop || 0;
+		        } else {
+		        	this.startScroll = document.body.scrollTop || document.documentElement.scrollTop;
+		        }     
 		        this.touching = true;
 		    },
 
@@ -305,7 +318,7 @@
 		    refresh() {
 		        this.state = 2;
 		        this.top = this.offset;
-		        this.onRefresh(this.refreshDone);
+		        // this.onRefresh(this.refreshDone);
 		    },
 
 		    refreshDone() {
@@ -315,7 +328,7 @@
 
 		    infinite() {
 		        this.infiniteLoading = true;
-		        this.onInfinite(this.infiniteDone);
+		        // this.onInfinite(this.infiniteDone);
 		    },
 
 		    infiniteDone() {
@@ -332,7 +345,7 @@
 		        let ptrHeight = this.onRefresh ? this.$el.querySelector('.pull-refresh').clientHeight : 0;
 		        let infiniteHeight = this.$el.querySelector('.load-more').clientHeight;
 		        let bottom = innerHeight - outerHeight - scrollTop - ptrHeight;
-		        if (bottom < infiniteHeight) this.infinite();
+		        // if (bottom < infiniteHeight) this.infinite();
 		    }
 		}
 

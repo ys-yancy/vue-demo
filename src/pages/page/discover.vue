@@ -12,19 +12,19 @@
 					<span class="arrow-right"></span>
 					<span class="desc-right"></span>
 				</router-link>
-				<li>
+				<router-link to='/friend' tag='li'>
 					<span class="account">朋友赚我也赚</span>
 					<span class="arrow-right"></span>
 					<span class="desc-right">
 						<span>$</span>
 						<span>0</span>
 					</span>
-				</li>
-				<li>
+				</router-link>
+				<router-link to='/newTrade' tag='li'>
 					<span class="account">最新交易</span>
 					<span class="desc-right">系统最新交易一览无余</span>
 					<span class="arrow-right"></span>	
-				</li>
+				</router-link>
 				<li>
 					<span class="account">本月榜单</span>
 					<span class="desc-right">真正的赚钱高手才能上榜</span>
