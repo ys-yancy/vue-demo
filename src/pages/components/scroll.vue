@@ -318,7 +318,7 @@
 		    refresh() {
 		        this.state = 2;
 		        this.top = this.offset;
-		        // this.onRefresh(this.refreshDone);
+		        this.onRefresh(this.refreshDone);
 		    },
 
 		    refreshDone() {
@@ -328,7 +328,7 @@
 
 		    infinite() {
 		        this.infiniteLoading = true;
-		        // this.onInfinite(this.infiniteDone);
+		        this.onInfinite(this.infiniteDone);
 		    },
 
 		    infiniteDone() {
@@ -345,7 +345,7 @@
 		        let ptrHeight = this.onRefresh ? this.$el.querySelector('.pull-refresh').clientHeight : 0;
 		        let infiniteHeight = this.$el.querySelector('.load-more').clientHeight;
 		        let bottom = innerHeight - outerHeight - scrollTop - ptrHeight;
-		        // if (bottom < infiniteHeight) this.infinite();
+		        if (bottom < infiniteHeight) this.infinite();
 		    }
 		}
 

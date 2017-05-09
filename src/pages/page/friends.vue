@@ -11,7 +11,8 @@
 		<section class="info-list">
 			<h1></h1>
 			<div class="wrapper"></div>
-			<v-scroll :on-refresh="getHistoryOrderList" :on-infinite="onInfinite" :isSetWrapper='true'>
+			<v-scroll :on-refresh="getHistoryOrderList" :on-infinite="onInfinite" :isSetWrapper='true'
+			:enableInfinite='false' :enableRefresh='false'>
 				<ul class="J_Inner scrollInner">
 					<li v-for='user in list' class="item clearfix ">
 						<div class="img-wrapper-outer">
