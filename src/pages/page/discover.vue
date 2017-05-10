@@ -20,21 +20,21 @@
 						<span>0</span>
 					</span>
 				</router-link>
-				<router-link to='/newTrade' tag='li'>
+				<router-link :to='{path: "/newTrade", query: {checkView: "newTrade"}}' tag='li'>
 					<span class="account">最新交易</span>
 					<span class="desc-right">系统最新交易一览无余</span>
 					<span class="arrow-right"></span>	
-				</router-link>
-				<li>
+				</router-link >
+				<router-link :to='{path: "/newTrade", query: {checkView: "hotSale"}}' tag='li'>
 					<span class="account">本月榜单</span>
 					<span class="desc-right">真正的赚钱高手才能上榜</span>
 					<span class="arrow-right"></span>	
-				</li>
-				<li>
+				</router-link>
+				<router-link :to='{path: "/newTrade", query: {checkView: "recentProfits"}}' tag='li'>
 					<span class="account">近期盈利</span>
 					<span class="desc-right">看看最近15天都谁在赚钱</span>
 					<span class="arrow-right"></span>	
-				</li>
+				</router-link>
 			</ul>
 		</section>
 		<my-footer></my-footer>

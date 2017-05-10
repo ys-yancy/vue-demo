@@ -28,7 +28,7 @@
 
 		<section class="list">
 			<ul>
-				<li v-for='user in timeList'>
+				<li v-for='user in timeList' :key='user.symbol'>
 					<div class="left">
 						<div class="img-wrapper-outer">
 							<div class="img-wrapper">
