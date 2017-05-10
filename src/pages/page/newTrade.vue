@@ -87,8 +87,10 @@
 	.new-trade{
 		background: #b60005;
 		/*.margin-top(80);*/
+		header{
+			background: #8c1e0a;
+		}
 		nav{
-			background-color: #967BDC;
 			.height(72);
 			.margin-top(80);
 			.nav-list{
