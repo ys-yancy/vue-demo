@@ -26,7 +26,9 @@
 		<section v-if='checkView == "newTrade"' class="list-wrapper">
 			<v-scroll :enableRefresh='false'>
 				<ul id="J_list" class="list">
-					<li v-for='(user, index) in list' :key='index'>
+					<router-link tag='li' v-for='(user, index) in list' 
+					:to='{path: "/orderShare", query: {invite: user.invite_code, symbol: user.symbol, name: user.symbolName, order: user.ticket, nickname: user.nickname, cmd: user.cmd, 
+					unit: user.min_quote_unit}}' :key='index'>
 						<div class="img-wrapper-outer">
 							<div class="img-wrapper">
 								<img class="img" src="../img/my-sort-latest-down.png">
@@ -37,7 +39,7 @@
 							<p class="name">{{user.nickname}}</p>
 						</div>
 						<span class="time">{{user.openTime}}</span>
-					</li>
+					</router-link>
 				</ul>
 			</v-scroll>
 		</section>

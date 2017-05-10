@@ -7,19 +7,18 @@ import App from '../pages/App';
 import VueRouter from 'vue-router';
 
 //vue组件
-import Index from '../pages/page/index.vue';
-import Home from '../pages/page/home.vue';
-import Page from '../pages/page/page.vue';
-import optionList from '../pages/page/optionList.vue';
-import proTrading from '../pages/page/proTrading.vue';
-import Login from '../pages/page/login.vue';
-import curretOrder from '../pages/page/curretOrder.vue';
-import historyOrder from '../pages/page/orderHistory.vue';
-import discover from '../pages/page/discover.vue';
-import my from '../pages/page/my.vue';
-import timeline from '../pages/page/timeline.vue';
-import friend from '../pages/page/friends.vue';
-import newTrade from '../pages/page/newTrade.vue';
+const Home = r => require.ensure([], () => r(require('../pages/page/home.vue')), 'Home');
+const optionList = r => require.ensure([], () => r(require('../pages/page/optionList.vue')), 'optionList');
+const proTrading = r => require.ensure([], () => r(require('../pages/page/proTrading.vue')), 'proTrading');
+const Login = r => require.ensure([], () => r(require('../pages/page/login.vue')), 'Login');
+const curretOrder = r => require.ensure([], () => r(require('../pages/page/curretOrder.vue')), 'curretOrder');
+const historyOrder = r => require.ensure([], () => r(require('../pages/page/orderHistory.vue')), 'historyOrder');
+const discover = r => require.ensure([], () => r(require('../pages/page/discover.vue')), 'discover');
+const my = r => require.ensure([], () => r(require('../pages/page/my.vue')), 'my');
+const timeline = r => require.ensure([], () => r(require('../pages/page/timeline.vue')), 'timeline');
+const friend = r => require.ensure([], () => r(require('../pages/page/friends.vue')), 'friend');
+const newTrade = r => require.ensure([], () => r(require('../pages/page/newTrade.vue')), 'newTrade');
+const orderShare = r => require.ensure([], () => r(require('../pages/page/orderShare')), 'orderShare');
 
 Vue.use(VueRouter);
 
@@ -87,6 +86,10 @@ const routes = [
         ]
     },
     { path: '/newTrade', component: newTrade,
+        children: [
+        ]
+    },
+    { path: '/orderShare', component: orderShare,
         children: [
         ]
     },
