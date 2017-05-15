@@ -19,6 +19,7 @@ const timeline = r => require.ensure([], () => r(require('../pages/page/timeline
 const friend = r => require.ensure([], () => r(require('../pages/page/friends.vue')), 'friend');
 const newTrade = r => require.ensure([], () => r(require('../pages/page/newTrade.vue')), 'newTrade');
 const orderShare = r => require.ensure([], () => r(require('../pages/page/orderShare')), 'orderShare');
+const profile = r => require.ensure([], () => r(require('../pages/page/profile')), 'profile');
 
 Vue.use(VueRouter);
 
@@ -90,6 +91,10 @@ const routes = [
         ]
     },
     { path: '/orderShare', component: orderShare,
+        children: [
+        ]
+    },
+    { path: '/profile', component: profile,
         children: [
         ]
     },

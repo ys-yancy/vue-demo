@@ -30,7 +30,37 @@
 		-webkit-transform: translateZ(0);
 		transform: translateZ(0);
 	}
-	
+
+	.tab-content-wrapper .highcharts-range-selector-buttons {
+  		display: none;
+	}
+	.tab-content-wrapper svg .highcharts-range-selector-buttons,
+	.tab-content-wrapper svg .highcharts-input-group,
+	.tab-content-wrapper svg .highcharts-scrollbar {
+		display: none;
+	}
+
+	.tab-content-wrapper .highcharts-grid path{
+        border-color: #1f172c;
+    }
+    .tab-content-wrapper .highcharts-axis path{
+        stroke: #4b425a;
+        stroke-width: 2;
+    }
+    .tab-content-wrapper .highcharts-grid path{
+        stroke: #43496a;
+    }
+    .tab-content-wrapper .highcharts-tracker path{
+        stroke-width: 3;
+        stroke: #01bdf1;
+        fill: #01bdf1;
+    }
+    .tab-content-wrapper svg>path {
+       stroke: #967adc;
+    }
+    .tab-content-wrapper .highcharts-data-labels tspan{
+        text-shadow: none;
+    }
 
 	/*
 	*   过渡动画

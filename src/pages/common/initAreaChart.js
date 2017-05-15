@@ -1,9 +1,10 @@
-import Util from '../common/util';
 import Highcharts from '../lib/highstock';
 const areaChartMixin = {
 	data() {
-		instance: null,
-	}
+		return {
+			instance: null,
+		}
+	},
 	methods: {
 		initAreaChart(data) {
 			this.instance = new Highcharts.StockChart({
@@ -108,10 +109,10 @@ const areaChartMixin = {
 			return this.instance;
 		},
 
-		addChartPoint() {
-			const data = this.instance.series[0].data;
+		addChartPoint(point) {
+			const data = this.instance.series[0].data,
 			lastData = data[data.length - 1],
-				lastDate = new Date(lastData.category);
+			lastDate = new Date(lastData.category),
 			date = new Date(point[0]);
 
 			if (true) {
@@ -141,3 +142,5 @@ const areaChartMixin = {
 	}
 
 }
+
+module.exports = areaChartMixin;

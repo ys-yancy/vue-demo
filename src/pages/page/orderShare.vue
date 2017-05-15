@@ -6,7 +6,7 @@
 		<section class="content">
 			<div class="container-hd">
 				<div class="hd">
-					<span class="tag">{{params.cmd}}</span>
+					<span class="tag" :class='{buy: params.cmd == "买涨"}'>{{params.cmd}}</span>
 					<h2>
 						<span>{{params.symbolName}}</span>
 					</h2>
@@ -63,7 +63,27 @@
 					<div class="tab-nav">投资人信息</div>
 					<div class="tab-nav active">价格走势图</div>
 				</div>
-				<div class="tab-content-wrapper"></div>
+				<div class="tab-content-wrapper">
+					<div class="tab-content">
+						<div id="J_Chart" class="chart"></div>
+						<div class="price-wrapper clearfix">
+							<span class="open-price show">
+								开仓:<span class="J_OpenPrice">{{ticketParams.openPrice}}</span>
+							</span>
+							<span class="profit-wrapper show">
+								止盈:<span class="J_Profit">{{ticketParams.takeProfit}}</span>
+							</span>
+							<span class="stoploss-wrapper show">
+								止损:<span class="J_StopLoss">{{ticketParams.stopLoss}}</span>
+							</span>
+							<span class="cur-price show">
+								现价:<span class="J_CurPrice">
+								{{this.chartLastData&&this.chartLastData[1] || ticketParams.openPrice}}
+								</span>
+							</span>
+						</div>
+					</div>
+				</div>
 			</div>
 			<div class="bottom">
 				<router-link class='link' to='/orderShare'>马上跟投</router-link>
@@ -75,7 +95,6 @@
 		</section>
 	</div>
 </template>
-
 <style lang="less" scoped>
 	@import '../style/variable.less';
 	.order-share{
@@ -100,6 +119,9 @@
 					text-align: center;
 					.top(35);
 					.left(40);
+					&.buy{
+						background: #ff6b6b;
+					}
 				}
 				h2{
 					.font-size(33);
@@ -177,7 +199,22 @@
 				}
 			}
 			.tab-content-wrapper{
-				.height(320);
+				position: relative;
+				.height(315);
+				.price-wrapper{
+					position: absolute;
+					.width(640);
+					.bottom(0);
+					.font-size(0);
+					color: #01bdf1;
+					.padding-left(20);
+					background: #3b4162;
+					&>span{
+						display: inline-block;
+						.font-size(22);
+						.width(155);
+					}
+				}
 			}
 		}
 		.bottom{
@@ -186,14 +223,14 @@
 			.bottom(0);
 			.right(0);
 			.left(0);
-			.padding(40, 0, 20, 0);
+			.padding(30, 0, 20, 0);
 			a{
 				display: block;
 				background: #5d4ec5;
 				.font-size(30);
 				color: #fff;
 				.width(420);
-				.line-height(60);
+				.line-height(50);
 				text-align: center;
 				margin: 0 auto;
 				.border-radius(10);
@@ -211,15 +248,22 @@
 </style>
 
 <script type="text/javascript">
+	import Util from '../common/util';
+	import _ from '../../service/page-base';
 	import myHeader from '../components/header.vue';
+	import myMixinAreaChart from '../common/initAreaChart';
 	export default {
 		name: 'orderShare',
 		data() {
 			return {
 				routeParams: '',
 				ticketParams: '',
+				chartLastData: '',
+				symbolPriceList: [],
 			}
 		},
+
+		mixins: [myMixinAreaChart],
 
 		methods: {
 			async getOrderTicketList() {
@@ -233,14 +277,57 @@
 				}).then((data)=> {
 					this.ticketParams = data.data.data;
 					
-					console.log(data.data.data)
+					return this.ticketParams;
 				})
-			}
+			},
+
+			async getAreaChartSymbolList() {
+
+				let params = {
+					id: this.routeParams.symbol,
+					tf: 'm30',
+					group_name: 'b2b_demo_0',
+				}
+
+				let symbolList = await _.getStockSymbolList(params);
+				let data = symbolList.data.data.price;
+
+        		var count = 0;
+
+        		for ( let i = data.length - 1; i > 0; i-- ) {
+					const item = data[i];
+					++count;
+					this.symbolPriceList.push([
+			          Util.getTime(item.beijing_time),
+			          item.open,
+			          item.high,
+			          item.low,
+			          item.close
+			        ]);
+
+			        if (count > 50) {
+            			break;
+          			}
+				}
+
+
+
+				this.symbolPriceList.sort(function(a, b) {
+			        return a[0] > b[0] ? 1 : -1;
+			    });
+
+			    this.chartLastData = this.symbolPriceList[this.symbolPriceList.length-1];
+
+			    this.initAreaChart(this.symbolPriceList);
+
+				return this.symbolPriceList;
+			},
 		},
 
 		created() {
 			this.routeParams = this.$route.query;
 			this.getOrderTicketList();
+			this.getAreaChartSymbolList();
 
 		},
 
@@ -270,6 +357,47 @@
 					floatWidth: floatPer * 100 + '%',
 					marginWidth: marginPer * 100 + '%',
 					progressWidth: progressPer,
+				}
+			},
+
+			curPrice() {
+				let subscribe_price = this.$store.state.symbolCurrentPrice,
+					cur_symbol = this.routeParams.symbol,
+					subscribe_symbol = subscribe_price[0];
+
+				if  ( cur_symbol === subscribe_symbol ) {
+					return subscribe_price;
+				}
+				return;	
+			},
+		},
+
+		watch: {
+			curPrice(price) {
+				if (price) {
+
+					let cur_symbol = this.params.symbols,
+						subscribe_symbol = price[0];
+			
+					const bidPrice = parseFloat(price[3]);
+
+					if (this.chartLastData) {
+
+						const curData1 = Util.getTime(price[7]),
+						curData2 = this.chartLastData[2]&&this.chartLastData[2] < bidPrice ? bidPrice : this.chartLastData[2],
+						curData3 = this.chartLastData[3]&&this.chartLastData[3] < bidPrice ? bidPrice : this.chartLastData[3],
+						curData4 = bidPrice;
+
+						this.chartLastData.splice(0, 1, curData1);
+						this.chartLastData.splice(2, 1, curData2);
+						this.chartLastData.splice(3, 1, curData3);
+						this.chartLastData.splice(4, 1, curData4);
+
+						//updata the chart lastData
+						this.addChartPoint(this.chartLastData);
+					}	
+				} else {
+					// console.log('else: ' + price)
 				}
 			}
 		},

@@ -2,7 +2,7 @@
 	<div class="my-wrapper">
 		<my-header page-title='我'></my-header>
 
-		<div class="detail-wrapper-outer">
+		<router-link tag='div' to='/profile' class="detail-wrapper-outer">
 			<div class="img-wrapper-outer">
 				<div class="img-wrapper">
 					<img src="https://api.51aishanghui.com/static/user/0/4/avatar.1492178171.jpg" class="img">
@@ -19,7 +19,7 @@
 					<span class="J_InviteCode">yh3332</span>
 				</p>
 			</div>
-		</div>
+		</router-link>
 		<ul class="J_Rank bd bd-first">
 			<li>
 				<span class="J_Account account">
