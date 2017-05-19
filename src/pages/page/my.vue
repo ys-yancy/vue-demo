@@ -20,7 +20,7 @@
 				</p>
 			</div>
 		</router-link>
-		<ul class="J_Rank bd bd-first">
+		<router-link tag='ul' to='account' class="J_Rank bd bd-first">
 			<li>
 				<span class="J_Account account">
 					<span>我的资产: 14.6</span>
@@ -28,7 +28,7 @@
 				</span>
 				<span class="arrow-right"></span>
 			</li>
-		</ul>
+		</router-link>
 
 		<ul class="bd bd-first">
 			<li>

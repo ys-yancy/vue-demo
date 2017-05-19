@@ -20,6 +20,7 @@ const friend = r => require.ensure([], () => r(require('../pages/page/friends.vu
 const newTrade = r => require.ensure([], () => r(require('../pages/page/newTrade.vue')), 'newTrade');
 const orderShare = r => require.ensure([], () => r(require('../pages/page/orderShare')), 'orderShare');
 const profile = r => require.ensure([], () => r(require('../pages/page/profile')), 'profile');
+const account = r => require.ensure([], () => r(require('../pages/page/account')), 'account');
 
 Vue.use(VueRouter);
 
@@ -98,6 +99,10 @@ const routes = [
         children: [
         ]
     },
+    { path: '/account', component: account,
+        children: [
+        ]
+    }
 
 ];
 
