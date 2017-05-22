@@ -140,6 +140,76 @@ export default {
 		return currentOrderList;
 	},
 
+	// 个人设置
+
+	async getWatchdataLimt(options) {
+		const params = {
+			url: 'http://newapi.invhero.com/v1/user/profile/permission/data',
+			type: 'GET',
+			data: {
+				access_token: Cookie.get('token'),
+				invite_code: 'yntma2',
+				_r: Math.random(),
+			},
+			unjoin: true,
+		}
+
+		let watchdataLimt = await __.ajax(params);
+
+		return watchdataLimt;
+	},
+
+	async getCurrentOrderLimt(options) {
+		const params = {
+			url: 'http://newapi.invhero.com/v1/user/profile/permission/current_order',
+			type: 'GET',
+			data: {
+				access_token: Cookie.get('token'),
+				invite_code: 'yntma2',
+				_r: Math.random(),
+			},
+			unjoin: true,
+		}
+
+		let currentOrderLimt = await __.ajax(params);
+
+		return currentOrderLimt;
+	},
+
+	async getHistoryOrderLimt(options) {
+		const params = {
+			url: 'http://newapi.invhero.com/v1/user/profile/permission/history_order',
+			type: 'GET',
+			data: {
+				access_token: Cookie.get('token'),
+				invite_code: 'yntma2',
+				_r: Math.random(),
+			},
+			unjoin: true,
+		}
+
+		let historyOrderLimt = await __.ajax(params);
+
+		return historyOrderLimt;
+	},
+
+	async getAllowFollowingLimt(options) {
+		const params = {
+			url: 'http://newapi.invhero.com/v1/user/profile/permission/allow_following',
+			type: 'GET',
+			data: {
+				access_token: Cookie.get('token'),
+				invite_code: 'yntma2',
+				_r: Math.random(),
+			},
+			unjoin: true,
+		}
+
+		let allowFollowingLimt = await __.ajax(params);
+
+		return allowFollowingLimt;
+	},
+
 	/**
 	* 输入开仓价格, 交易账户, 交易品种, 交易量, 计算占用保证金
 	* openPrice: 设定的开仓价格

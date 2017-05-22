@@ -6,6 +6,10 @@ import {
 	CURSYMBOLINFO,
 	USERACCOUNT,
 	ISLOGIN,
+	WATCHDATALIMT,
+	CURRENTORDERLIMT,
+	HISTORYORDERLIMT,
+	ALLOWFOLLOWINGLIMT,
 } from './mutations_types';
 
 export default {
@@ -35,5 +39,18 @@ export default {
 
 	[CURSYMBOLINFO]( state, curSymbolInfoData ) {
 		state.curSymbolInfoData = curSymbolInfoData;
-	}
+	},
+
+	[WATCHDATALIMT]( state, limt ) {
+		state.watchdataLimt = limt;
+	},
+	[CURRENTORDERLIMT]( state, limt ) {
+		state.currentOrderLimt = limt;
+	},
+	[HISTORYORDERLIMT]( state, limt ) {
+		state.historyOrderLimt = limt;
+	},
+	[ALLOWFOLLOWINGLIMT]( state, limt ) {
+		state.allowFollowingLimt = limt;
+	},
 }

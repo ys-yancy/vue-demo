@@ -37,6 +37,24 @@ export default {
 		})	
 	},
 
+	getUserLimt({commit, state}, options) {
+		_.getWatchdataLimt(options).then(function( infoData ) {
+			commit('WATCHDATALIMT', infoData.data.data.permission);	
+		});
+
+		_.getCurrentOrderLimt(options).then(function( infoData ) {
+			commit('CURRENTORDERLIMT', infoData.data.data.permission);	
+		});
+
+		_.getHistoryOrderLimt(options).then(function( infoData ) {
+			commit('HISTORYORDERLIMT', infoData.data.data.permission);	
+		});
+
+		_.getAllowFollowingLimt(options).then(function( infoData ) {
+			commit('ALLOWFOLLOWINGLIMT', infoData.data.data.permission);	
+		});	
+	},
+
 	// 订阅报价
 	getStompCurrentPrice( {commit, state} ) {
 		let [ login, passcode, host, url ] = 

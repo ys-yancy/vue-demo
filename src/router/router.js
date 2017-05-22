@@ -21,6 +21,7 @@ const newTrade = r => require.ensure([], () => r(require('../pages/page/newTrade
 const orderShare = r => require.ensure([], () => r(require('../pages/page/orderShare')), 'orderShare');
 const profile = r => require.ensure([], () => r(require('../pages/page/profile')), 'profile');
 const account = r => require.ensure([], () => r(require('../pages/page/account')), 'account');
+const personalSetting = r => require.ensure([], () => r(require('../pages/page/personalSetting')), 'personalSetting');
 
 Vue.use(VueRouter);
 
@@ -100,6 +101,10 @@ const routes = [
         ]
     },
     { path: '/account', component: account,
+        children: [
+        ]
+    },
+    { path: '/personalSetting', component: personalSetting,
         children: [
         ]
     }

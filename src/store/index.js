@@ -13,6 +13,10 @@ const state = {
 	curSymbolInfoData: '',
 	userAccount: '',
 	isLogin: '',
+	watchdataLimt: 1,
+	currentOrderLimt: 1,
+	historyOrderLimt: 1,
+	allowFollowingLimt: 1,
 }
 
 export default new Vuex.Store({

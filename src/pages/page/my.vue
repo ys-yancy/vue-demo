@@ -46,13 +46,13 @@
 		</ul>
 			
 		<ul class="bd bd-second">
-			<li>
+			<router-link tag='li' to='/personalSetting'>
 				<span  class="my-count">
 					<span>个人设置</span>
 					<span class="desc-right">头像 昵称 隐私</span>
 				</span>
 				<span class="arrow-right"></span>
-			</li>
+			</router-link>
 			<li>
 				<span  class="system_notice">
 					<span>系统公告</span>
