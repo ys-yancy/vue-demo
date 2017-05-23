@@ -128,12 +128,22 @@
 						break;
 				}
 				return this.sliderClass;
+			},
+
+			clearSlider() {
+				this.sliderController&&clearTimeout(this.sliderController);
 			}
 		},
 
 		created() {
 			this.sliderImg();
 			this.sliderWrapperStyle.width = 16 * 3 + 'rem';
-		}
+		},
+
+		watch: {
+		    '$route' (to, from) {
+		     	//这里不触发
+		    }
+		},
 	}
 </script>

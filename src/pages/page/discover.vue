@@ -99,6 +99,6 @@
 			myHeader,
 			myFooter,
 			mySliderImage,
-		}
+		},
 	}
 </script>
