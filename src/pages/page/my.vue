@@ -60,9 +60,9 @@
 				<span class="arrow-right"></span>
 			</li>
 			<li>
-				<span  class="system_notice">
+				<a href="http://weixin.invhero.com/help" class="system_notice">
 					<span>使用帮助</span>
-				</span>
+				</a>
 				<span class="arrow-right"></span>
 			</li>
 			<li>
@@ -175,6 +175,7 @@
 				.width(640);
 				.height(100);
 				.line-height(100);
+				color: #807691;
 				.desc-right{
 					.margin-left(260);
 				}
