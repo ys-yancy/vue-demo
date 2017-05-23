@@ -1,7 +1,7 @@
 <template>
 	<div class="per-wrapper">
 		<my-header page-title='个人设置'>
-			
+			<span slot='icon-logo' class="go-back" @click='$router.go(-1)'><</span>
 		</my-header>
 		<section class="portrait">
 			<div class="img-wrapper-outer">
@@ -21,7 +21,7 @@
 			<div class="item data">
 				<div class="head">
 					<p class="title">允许别人查看我的[投资数据]</p>
-					<span class="radio-wrapper off J_Data" :class="{off: !userLimt.dataLimt}" @click='setData(1)'></span>
+					<span class="radio-wrapper J_Data" :class="{off: !userLimt.dataLimt}" @click='setData(1)'></span>
 				</div>
 				<div class="body">
 					开启后其他用户可以在您的"个人详情页面"查看您的投资统计数据.
@@ -172,11 +172,55 @@
 
 		methods: {
 			setData(index) {
-				
-				// this.ajax({
-				// 	url: 'http://newapi.invhero.com/v1/user/profile/permission/data',
-				// 	type: ""
-				// })
+				const perm = this.setOff(index),
+					  url = this.getUrl(index);
+
+				this.ajax({
+					url: url,
+					type: 'POST',
+					data: {
+						access_token: this.cookie.get('token'),
+						invite_code: 'yntma2',
+						permission: perm,
+					}
+				}).then(function(data) {
+					console.log(data)
+				})
+			},
+
+			getUrl(index) {
+				let url;
+				switch(index) {
+					case 1: 
+						url = 'http://newapi.invhero.com/v1/user/profile/permission/data';
+						break;
+					case 2:
+						url = 'http://newapi.invhero.com/v1/user/profile/permission/current_order';
+						break;
+					case 3:
+						url = 'http://newapi.invhero.com/v1/user/profile/permission/history_order';
+						break;
+					case 4:
+						url = 'http://newapi.invhero.com/v1/user/profile/permission/allow_following';
+						break;
+				}
+				return url;
+			},
+
+			setOff(index) {
+				if ( index == 1 ) {
+					this.Limt.dataLimt = this.Limt.dataLimt ? 0 : 1;
+					return this.Limt.dataLimt;
+				} else if ( index == 2 ) {
+					this.Limt.curOrderLimt = this.Limt.curOrderLimt ? 0 : 1;
+					return this.Limt.curOrderLimt;
+				} else if ( index == 3 ) {
+					this.Limt.hisOrderLimt = this.Limt.hisOrderLimt ? 0 : 1;
+					return this.Limt.hisOrderLimt;
+				} else {
+					this.Limt.followingLimt = this.Limt.followingLimt ? 0 : 1;
+					return this.Limt.followingLimt;
+				}
 			}
 		},
 
