@@ -86,6 +86,7 @@
 </style>
 
 <script type="text/javascript">
+	import { mapMutations } from 'vuex'
 	export default {
 		name: 'sliderImage',
 		data() {
@@ -94,11 +95,14 @@
 				sliderController: '',
 				sliderWrapperStyle: {
 					width: '',
-				}
+				},
 			}
 		},
 
 		methods: {
+			...mapMutations([
+				'SLIDERCONTROLLER',
+			]),
 			sliderImg() {
 				console.log('slider start');
 
@@ -140,10 +144,15 @@
 			this.sliderWrapperStyle.width = 16 * 3 + 'rem';
 		},
 
-		watch: {
-		    '$route' (to, from) {
-		     	//这里不触发
-		    }
+		beforeDestroy() {
+			this.clearSlider();
 		},
+
+		watch: {  
+	        $route(to, from){  
+				//路由响应式参数时才会触发
+	            console.log('从' + from +'到'+to);  
+	        }  
+    	}  
 	}
 </script>
