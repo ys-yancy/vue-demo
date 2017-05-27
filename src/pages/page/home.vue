@@ -3,10 +3,13 @@
 		<my-header page-title='交易'>
 			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> 使用帮助 </span>
 			<div slot='right-icon' class="right-icon">
-				<span class="add-icon"> + </span>
+				<span class="add-icon" @click.prevent.stop='addClicked'> + </span>
 			</div>
 		</my-header>
+		<div v-show='isShortcutShow' class="shortcut-wrapper-outer" @touchmove.prevent.stop @click.prevent.stop='hideShortcut'>
+			<my-shortcut></my-shortcut>
 
+		</div>
 		<nav class="nav-wrapper">
 			<ul class="nav-list">
 				<router-link to='/option' class='clearfix first'>自选</router-link>
@@ -22,6 +25,13 @@
 		<my-account></my-account>
 
 		<my-footer></my-footer>
+
+		<my-dialog v-if='exchangeCode' 
+		:on-confirm='confirmClicked' 
+		:on-close = 'closeClicked'
+		>
+			<input type='text' class="dialog-input" placeholder="输入兑换码" />
+		</my-dialog>
 	</div>
 </template>
 <style lang='less' scoped>
@@ -42,6 +52,15 @@
 				.font-size(50);
 				color: #E6E0F7;
 			}
+		}
+		.shortcut-wrapper-outer{
+			position: fixed;
+			z-index: 20;
+			.top(0);
+			.left(0);
+			.right(0);
+			.bottom(0);
+			background: rgba(0, 0, 0, .7);
 		}
 		nav{
 			background-color: #967BDC;
@@ -75,11 +94,19 @@
 				}
 			}
 		}
-
 		.account{
 			position: fixed;
 			z-index: 10;
 			.bottom(90);
+		}
+		.dialog-wrapper-outer{
+			.dialog-input{
+				.height(50);
+				.border(1, solid, #967adc);
+				outline: 0;
+				text-align: center;
+				.border-radius(5);
+			}
 		}	
 	}
 </style>
@@ -89,6 +116,9 @@
 	import myHeader from '../components/header';
 	import myAccount from '../components/account';
 	import myMarquee from '../components/marquee';
+	import myShortcut from '../components/shortcut';
+	//应该放的app里用vuex控制
+	import myDialog from '../components/dialog';
 	import F from '../lib/frame.js';
 
 	export default {
@@ -97,17 +127,36 @@
 		data() {
 			return {
 				Client: '',
-				stompBody: ''
+				stompBody: '',
+				exchangeCode: true,
+				isShortcutShow: false,
 			}
 		},
 
 		methods: {
+			hideShortcut() {
+				this.isShortcutShow = false;
+			},
+
+			addClicked() {
+				this.isShortcutShow = this.isShortcutShow ? false : true;
+			},
+
+			showExchangeCode() {
+
+			},
+
+			confirmClicked(calback) {
+				this.exchangeCode = this.exchangeCode ? false : true;
+			},
+
+			closeClicked(calback) {
+				this.exchangeCode = false;
+			},
 
 		},
 
 		mounted() {
-			console.log('Home加载完毕！');
-			console.log(this)
 			this.$nextTick(function() {
 				new this.$sticky({el: '.nav-list'});
 			})
@@ -119,6 +168,8 @@
 			myFooter: myFooter,
 			myAccount: myAccount,
 			myMarquee: myMarquee,
+			myShortcut: myShortcut,
+			myDialog: myDialog,
 		}
 
 	}
