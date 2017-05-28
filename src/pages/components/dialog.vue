@@ -75,6 +75,11 @@
 		},
 
 		props: {
+			isShowDidlog: {
+				type: Boolean,
+				default: false,
+				required: false,
+			},
 			onConfirm: {
 				type: Function,
 				default: undefined,

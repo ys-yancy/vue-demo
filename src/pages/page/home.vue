@@ -6,8 +6,10 @@
 				<span class="add-icon" @click.prevent.stop='addClicked'> + </span>
 			</div>
 		</my-header>
-		<div v-show='isShortcutShow' class="shortcut-wrapper-outer" @touchmove.prevent.stop @click.prevent.stop='hideShortcut'>
-			<my-shortcut></my-shortcut>
+		<div v-show='isShortcutShow' class="shortcut-wrapper-outer" 
+		@touchmove.prevent.stop 
+		@click.prevent.stop='hideShortcut'>
+			<my-shortcut :on-changecode='showchangeCode'></my-shortcut>
 
 		</div>
 		<nav class="nav-wrapper">
@@ -26,7 +28,8 @@
 
 		<my-footer></my-footer>
 
-		<my-dialog v-if='exchangeCode' 
+		<my-dialog v-if='exchangeCode'
+		:is-showDiglog='exchangeCode'
 		:on-confirm='confirmClicked' 
 		:on-close = 'closeClicked'
 		>
@@ -128,7 +131,7 @@
 			return {
 				Client: '',
 				stompBody: '',
-				exchangeCode: true,
+				exchangeCode: false,
 				isShortcutShow: false,
 			}
 		},
@@ -142,8 +145,8 @@
 				this.isShortcutShow = this.isShortcutShow ? false : true;
 			},
 
-			showExchangeCode() {
-
+			showchangeCode(calback) {
+				this.exchangeCode = true;
 			},
 
 			confirmClicked(calback) {

@@ -5,7 +5,7 @@
 				<span class="icon"></span>
 				<span class="name">添加自选</span>
 			</li>
-			<li>
+			<li @click='showExchangecode'>
 				<span class="icon"></span>
 				<span class="name">输入兑换码</span>
 			</li>
@@ -78,8 +78,18 @@
 			}
 		},
 
-		methods: {
+		props: {
+			onChangecode: {
+				type: Function,
+				default: undefined,
+				required: false,
+			}
+		},
 
+		methods: {
+			showExchangecode() {
+				this.onChangecode();
+			}
 		},
 
 		created() {
