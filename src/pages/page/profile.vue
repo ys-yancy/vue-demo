@@ -6,7 +6,7 @@
 		<section class="info">
 			<div class="img-wrapper-outer">
 				<div class="img-wrapper">
-					<img class="img" :src="userInfoData.avatar">
+					<img class="img" :src="userAccount.avatar">
 				</div>
 			</div>
 			<h2 class="name">{{userInfoData.nick_name}}</h2>
@@ -188,14 +188,14 @@
 		methods: {
 			async getUserInfo() {
 				let info = await this.ajax({
-					url: 'http://newapi.invhero.com/v1/user/profile/info?',
+					url: 'v1/user/profile/info?',
 					type: 'GET',
 					data: {
 						equity_threshold: 50,
 						monthly_invite: 0,
-						invite_code: 'yntma2',
+						invite_code: this.cookie.get('inviteCode'),
 						access_token: this.cookie.get('token'),
-						wl: 'tzyh365'
+						wl: this.cookie.get('wl'),
 					},
 				}).then((data)=> {
 					this.userInfoData = data.data.data;
@@ -206,6 +206,12 @@
 
 		created() {
 			this.getUserInfo();
+		},
+
+		computed: {
+			userAccount() {
+				return this.$store.state.userAccount;
+			}
 		},
 
 		components: {

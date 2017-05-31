@@ -243,7 +243,7 @@
 		methods: {
 			async getList() {
 				let list = await this.ajax({
-					url: 'http://newapi.invhero.com/v1/user/timeline/home',
+					url: 'v1/user/timeline/home',
 					type: 'GET',
 					data: {
 						access_token: this.cookie.get('token'),

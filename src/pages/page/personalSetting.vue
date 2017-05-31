@@ -192,16 +192,16 @@
 				let url;
 				switch(index) {
 					case 1: 
-						url = 'http://newapi.invhero.com/v1/user/profile/permission/data';
+						url = 'v1/user/profile/permission/data';
 						break;
 					case 2:
-						url = 'http://newapi.invhero.com/v1/user/profile/permission/current_order';
+						url = 'v1/user/profile/permission/current_order';
 						break;
 					case 3:
-						url = 'http://newapi.invhero.com/v1/user/profile/permission/history_order';
+						url = 'v1/user/profile/permission/history_order';
 						break;
 					case 4:
-						url = 'http://newapi.invhero.com/v1/user/profile/permission/allow_following';
+						url = 'v1/user/profile/permission/allow_following';
 						break;
 				}
 				return url;

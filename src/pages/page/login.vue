@@ -8,7 +8,7 @@
 				<input type="number" name="" v-model='password'  placeholder="请输入登录密码">
 			</div>
 			<div class="btn-wrap">
-				<input type="submit" name="" value="登录" @click.stop='submit'>
+				<input type="submit" name="" value="登录" @click.stop.prevent='submit'>
 			</div>
 		</form>
 	</div>
@@ -68,20 +68,39 @@
 			]),
 			submit() {
 				this.ajax({
-					url: 'http://newapi.invhero.com/v1/user/login',
+					url: 'v1/user/login',
 					type: 'POST',
 					data: {
 						phone: this.phone,
 	                	password: this.password,
 	                	cc: 86
 					},
-					unjoin: true,
 				}).then((data)=> {
 					if ( data.data.status == 200 ) {
 						this.ISLOGIN(data.data);
-						this.cookie.set('token', data.data.data.token,{
+
+						this.cookie.set('token', data.data.data.token, {
 							expires: Infinity,
-						})
+						});
+
+						this.cookie.set('phone', data.data.data.phone, {
+							expires: Infinity,
+						});
+
+						this.cookie.set('uuid', data.data.data.uuid, {
+							expires: Infinity,
+						});
+
+						this.cookie.set('inviteCode', data.data.data.inviteCode, {
+							expires: Infinity,
+						});
+
+						this.cookie.set('wl', data.data.data.wl, {
+							expires: Infinity,
+						});
+
+						this.cookie.set('type', 'demo');
+
 						this.$router.push({ path: 'option' });
 					}
 				})

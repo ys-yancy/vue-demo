@@ -146,7 +146,7 @@
 		methods: {
 			async getFriendList() {
 				let list = await this.ajax({
-					url: 'http://newapi.invhero.com/v1/rank/upline_reward/all/',
+					url: 'v1/rank/upline_reward/all/',
 					type: 'GET',
 					data: {
 						access_token: this.cookie.get('token'),

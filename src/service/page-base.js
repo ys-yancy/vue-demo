@@ -1,6 +1,6 @@
 import __ from './IO';
 import Cookie from '../pages/lib/cookie';
-import Storage from '../pages/lib/storage';
+import Storage from '../pages/common/storage';
 export default {
 	/*
 	*  @ token  	   测试服
@@ -10,22 +10,36 @@ export default {
 	// 获取账户信息
 	async getAccount() {
 		const params = {
-			url: 'http://newapi.invhero.com/v4/user/',
+			url: 'v4/user/',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
         		_r: Math.random(),
 			},
-			unjoin: true,
 		}
 
-		let account = await __.ajax(params);
+		let account = '';
+
+		let key = `${Cookie.get('token')}:account`;
+
+		let store_account = await this.getStore(key);
+
+		if ( store_account != null && store_account != '' ) {
+			account = store_account;
+		} else {
+			account = await __.ajax(params);
+			Storage.set(key, account);
+		}
+
+		Cookie.set('demo_group', account.data.data.account.demo.group_name);
+		Cookie.set('real_group', account.data.data.account.real.group_name);
+
 		return account;
 	},
 
 	// 获取交易页面的symbol
 	async getOptionSymbolList( options ) {
-		options.url = 'http://newapi.invhero.com/v3/demo/symbols6/';
+		options.url = 'v3/demo/symbols6/';
 
 		options._r = Math.random();
 
@@ -36,7 +50,6 @@ export default {
 				access_token: options.access_token,
 				_r: options._r,
 			},
-			unjoin: true,
 		}
 
 		let symbolData = await __.ajax(params);
@@ -91,13 +104,12 @@ export default {
 	async getCurSymbolInfo(options) {
 		const id = options.id, group_name = options.group_name;
 		const params = {
-			url: 'http://newapi.invhero.com/v3/demo/symbols6/',
+			url: 'v3/demo/symbols6/',
 			type: 'GET',
 			data: {
 				symbols: options.symbols,
 				access_token: Cookie.get('token'),
 			},
-			unjoin: true,
 		}
 
 		let CurSymbolInfo = await __.ajax(params);
@@ -108,13 +120,12 @@ export default {
 	// 获取当前订单列表
 	async getCurrentOrderList(options) {
 		const params = {
-			url: 'http://newapi.invhero.com/v1/orders/demo/current?',
+			url: 'v1/orders/demo/current?',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
 				_r: Math.random(),
 			},
-			unjoin: true,
 		}
 
 		let currentOrderList = await __.ajax(params);
@@ -125,14 +136,13 @@ export default {
 	// 获取当前订单列表
 	async getHistoryOrderList(options) {
 		const params = {
-			url: 'http://newapi.invhero.com/v1/orders/demo/history/list?',
+			url: 'v1/orders/demo/history/list?',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
 				page_num: options.page,
 				_r: Math.random(),
 			},
-			unjoin: true,
 		}
 
 		let currentOrderList = await __.ajax(params);
@@ -144,14 +154,13 @@ export default {
 
 	async getWatchdataLimt(options) {
 		const params = {
-			url: 'http://newapi.invhero.com/v1/user/profile/permission/data',
+			url: 'v1/user/profile/permission/data',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
-				invite_code: 'yntma2',
+				invite_code: Cookie.get('inviteCode'),
 				_r: Math.random(),
 			},
-			unjoin: true,
 		}
 
 		let watchdataLimt = await __.ajax(params);
@@ -161,14 +170,13 @@ export default {
 
 	async getCurrentOrderLimt(options) {
 		const params = {
-			url: 'http://newapi.invhero.com/v1/user/profile/permission/current_order',
+			url: 'v1/user/profile/permission/current_order',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
-				invite_code: 'yntma2',
+				invite_code: Cookie.get('inviteCode'),
 				_r: Math.random(),
 			},
-			unjoin: true,
 		}
 
 		let currentOrderLimt = await __.ajax(params);
@@ -178,14 +186,13 @@ export default {
 
 	async getHistoryOrderLimt(options) {
 		const params = {
-			url: 'http://newapi.invhero.com/v1/user/profile/permission/history_order',
+			url: 'v1/user/profile/permission/history_order',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
-				invite_code: 'yntma2',
+				invite_code: Cookie.get('inviteCode'),
 				_r: Math.random(),
 			},
-			unjoin: true,
 		}
 
 		let historyOrderLimt = await __.ajax(params);
@@ -195,14 +202,13 @@ export default {
 
 	async getAllowFollowingLimt(options) {
 		const params = {
-			url: 'http://newapi.invhero.com/v1/user/profile/permission/allow_following',
+			url: 'v1/user/profile/permission/allow_following',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
-				invite_code: 'yntma2',
+				invite_code: Cookie.get('inviteCode'),
 				_r: Math.random(),
 			},
-			unjoin: true,
 		}
 
 		let allowFollowingLimt = await __.ajax(params);
@@ -244,6 +250,13 @@ export default {
 			token = Cookie.get('token'),
 			key = `${token}:${type}:symbols`;
 		return Storage.get(key);
-	}
+	},
+
+	getStore(key) {
+		return new Promise(function( resolve, reject ) {
+			const val = Storage.get(key);
+			resolve(JSON.parse(val));
+		})
+	},
 
 }

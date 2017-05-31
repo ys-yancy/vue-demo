@@ -215,7 +215,6 @@
 				pageTitle: '',
 				page: 0,
 				page_size: 10,
-				wl: 'tzyh365',
 				list: '',
 				hotSale: {
 					equity_threshold: 100,
@@ -259,12 +258,12 @@
 			**/
 			async getNewTradeList() {			
 				let list = await this.ajax({
-					url: 'http://newapi.invhero.com/v1/rank/order/latest',
+					url: 'v1/rank/order/latest',
 					type: 'GET',
 					data: {
 						page: this.page,
 						page_size: this.page_size,
-						wl: this.wl,
+						wl: this.cookie.get('wl'),
 						_r: Math.random(),
 					}
 				}).then((data)=> {
@@ -275,13 +274,13 @@
 
 			async getHotSaleList() {			
 				let list = await this.ajax({
-					url: 'http://newapi.invhero.com/v1/rank/ror/month',
+					url: 'v1/rank/ror/month',
 					type: 'GET',
 					data: {
 						equity_threshold: this.hotSale.equity_threshold,
 						monthly_invite: this.hotSale.monthly_invite,
 						limit: this.hotSale.limit,
-						wl: this.wl,
+						wl: this.cookie.get('wl'),
 						_r: Math.random(),
 					}
 				}).then((data)=> {
@@ -292,15 +291,14 @@
 
 			async getProfitsList() {			
 				let list = await this.ajax({
-					url: 'http://newapi.invhero.com/v1/rank/user_profit/15/10',
+					url: 'v1/rank/user_profit/15/10',
 					type: 'GET',
 					data: {
-						wl: this.wl,
+						wl: this.cookie.get('wl'),
 						_r: Math.random(),
 					}
 				}).then((data)=> {
 					this.list = data.data.data;
-					console.log(this.list)
 					return this.list;
 				})
 			}

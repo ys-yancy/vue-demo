@@ -268,7 +268,7 @@
 		methods: {
 			async getOrderTicketList() {
 				let list = await this.ajax({
-					url: 'http://newapi.invhero.com/v1/order/' + this.routeParams.order,
+					url: 'v1/order/' + this.routeParams.order,
 					type: 'GET',
 					data: {
 						access_token: this.cookie.get('token'),
@@ -328,7 +328,6 @@
 			this.routeParams = this.$route.query;
 			this.getOrderTicketList();
 			this.getAreaChartSymbolList();
-
 		},
 
 		computed: {

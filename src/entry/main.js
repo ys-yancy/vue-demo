@@ -17,7 +17,11 @@ Vue.prototype.cookie = Cookie;
 
 Object.defineProperty(Vue.prototype, '$sticky',{
     value: Sticky,
-})
+});
+
+Object.defineProperty(Vue.prototype, '$getType',{
+    value: getType,
+});
 
 Vue.use(VueTouch, {name: 'v-touch'});
 
@@ -52,4 +56,8 @@ function isEmptyObject(obj) {
          return false;
      }
      return true;
+}
+
+function getType() {
+    return Cookie.get('type');
 }

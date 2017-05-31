@@ -6,7 +6,7 @@ export default {
 	},
 
 	ajax(options) {
-		const url = options.url,
+		let url = options.url,
 			  type = options.type,
 			  data = options.data;
 		data._r = Math.random();
@@ -14,6 +14,7 @@ export default {
 		if (!options.unjoin) {
       		options.url = options.url[0] !== '/' ? '/' + options.url : options.url;
       		// url = Config.getAjaxPrefix() + options.url;
+      		url = 'http://newapi.invhero.com' + options.url;
 		}
 
 		const defaultOptions = {
