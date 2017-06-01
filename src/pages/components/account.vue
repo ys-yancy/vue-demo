@@ -191,6 +191,7 @@
 </style>
 
 <script type="text/javascript">
+	import { mapMutations } from 'vuex';
 	export default {
 		name: 'account',
 		data() {
@@ -205,6 +206,10 @@
 		props: ['bg_color'],
 
 		methods: {
+			...mapMutations({
+				setType: 'CHANGETYPE',
+			}),
+
 			switchUnfold() {
 				this.curSwitch = false;
 				this.unfold = this.unfold ? false : true;
@@ -212,6 +217,14 @@
 			},
 
 			switchEvent(way) {
+				this.setDesc(way);
+				this.setType(way);
+				this.cookie.set('type', way);
+				this.isSwitch = true;
+				this.unfold = this.unfold ? false : true;
+			},
+
+			setDesc(way) {
 				if ( way === 'demo' ) {
 					this.cur_way = '模拟';
 					this.curSwitch = true;
@@ -219,8 +232,25 @@
 					this.cur_way = '实盘';
 					this.curSwitch = false;
 				}
-				this.isSwitch = true;
-				this.unfold = this.unfold ? false : true;
+			},
+
+		},
+
+		created() {
+			let type = this.$store.state.type;
+			this.setDesc(type);
+		},
+
+		computed: {
+			type() {
+				return this.$store.state.type;
+			}
+		},
+
+		watch: {
+			type(type) {
+				this.setType(type);
+				this.cookie.set('type', type);
 			}
 		}
 	}

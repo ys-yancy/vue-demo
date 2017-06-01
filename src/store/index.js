@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import mutations from './mutations';
 import actions from './action';
+import cookie from '../pages/lib/cookie'
 
 Vue.use(Vuex);
 
@@ -13,6 +14,7 @@ const state = {
 	curSymbolInfoData: '',
 	userAccount: '',
 	isLogin: '',
+	type: cookie.get('type'),
 	watchdataLimt: 1,
 	currentOrderLimt: 1,
 	historyOrderLimt: 1,

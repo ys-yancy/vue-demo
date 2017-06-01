@@ -35,6 +35,8 @@
 		>
 			<input type='text' class="dialog-input" placeholder="输入兑换码" />
 		</my-dialog>
+
+		<my-login></my-login>
 	</div>
 </template>
 <style lang='less' scoped>
@@ -120,6 +122,9 @@
 	import myAccount from '../components/account';
 	import myMarquee from '../components/marquee';
 	import myShortcut from '../components/shortcut';
+
+	import myLogin from '../components/login';
+
 	//应该放的app里用vuex控制
 	import myDialog from '../components/dialog';
 	import F from '../lib/frame.js';
@@ -173,6 +178,7 @@
 			myMarquee: myMarquee,
 			myShortcut: myShortcut,
 			myDialog: myDialog,
+			myLogin: myLogin,
 		}
 
 	}

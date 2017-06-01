@@ -39,7 +39,7 @@ export default {
 
 	// 获取交易页面的symbol
 	async getOptionSymbolList( options ) {
-		options.url = 'v3/demo/symbols6/';
+		options.url = 'v3/' + Cookie.get('type') + '/symbols6/';
 
 		options._r = Math.random();
 
@@ -104,7 +104,7 @@ export default {
 	async getCurSymbolInfo(options) {
 		const id = options.id, group_name = options.group_name;
 		const params = {
-			url: 'v3/demo/symbols6/',
+			url: 'v3/' + Cookie.get('type') + '/symbols6/',
 			type: 'GET',
 			data: {
 				symbols: options.symbols,
@@ -120,7 +120,7 @@ export default {
 	// 获取当前订单列表
 	async getCurrentOrderList(options) {
 		const params = {
-			url: 'v1/orders/demo/current?',
+			url: 'v1/orders/' + Cookie.get('type') + '/current?',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),
@@ -136,7 +136,7 @@ export default {
 	// 获取当前订单列表
 	async getHistoryOrderList(options) {
 		const params = {
-			url: 'v1/orders/demo/history/list?',
+			url: 'v1/orders/' + Cookie.get('type') + '/history/list?',
 			type: 'GET',
 			data: {
 				access_token: Cookie.get('token'),

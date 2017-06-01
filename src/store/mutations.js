@@ -6,6 +6,7 @@ import {
 	CURSYMBOLINFO,
 	USERACCOUNT,
 	ISLOGIN,
+	CHANGETYPE,
 	WATCHDATALIMT,
 	CURRENTORDERLIMT,
 	HISTORYORDERLIMT,
@@ -19,6 +20,10 @@ export default {
 
 	[ISLOGIN]( state, login ) {
 		state.isLogin = login;
+	},
+
+	[CHANGETYPE]( state, type ) {
+		state.type = type;
 	},
 
 	[OPTIONLISTDATA]( state, dataList ) {

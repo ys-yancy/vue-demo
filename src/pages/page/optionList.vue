@@ -4,7 +4,7 @@
 			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol}}' tag='li' v-for=' (symbol, index) in symbolList ' :key='symbol.name' ref='symbolListNode'  >
 				<div class="symbol_wrapper" :class='{move: move == index}' > <!--class move-->
 				<!-- <div class="symbol_wrapper" :class='{move: move == index}'> -->
-					<div class="symbol_status">
+					<div v-if='symbol.close' class="symbol_status">
 						<span>休市</span>
 					</div>
 					<div class="symbol-name clearfix">
@@ -26,12 +26,18 @@
 					</span>
 
 					<div class="action-wrapper clearfix">
-						<span class="up J_UpSymbol" @click.stop='moveTop();'>置顶</span>
-						<span class="del J_DelSymbol" @click.stop='delSymbol();'>移除</span>
+						<span class="up J_UpSymbol" @click.stop='moveTop(symbol.symbol, index);'>置顶</span>
+						<span class="del J_DelSymbol" @click.stop='delSymbol(symbol.symbol, index);'>移除</span>
 					</div>	
 				</div>
 			</router-link>
 		</ul>
+		<div class="add-wrapper">
+			<a href="#" class="add">
+				<span class="bar-x"></span>
+				<span class="bar-y"></span>
+			</a>
+		</div>
 	</section>
 </template>
 
@@ -39,6 +45,7 @@
 	@import '../style/variable.less';
 	.option-list{
 		background: #f4f3fb;
+		.padding-bottom(240);
 		#J_list{
 			li{	
 				position: relative;
@@ -164,6 +171,37 @@
 				
 			}
 		}
+		.add-wrapper{
+			.margin-top(10);
+			background: #fff;
+			.padding(30, 0);
+			text-align: center;
+			.add{
+				position: relative;
+				display: inline-block;
+				.width(100);
+				.height(100);
+				.border(3, dashed, #ccc);
+				.bar-x{
+					position: absolute;
+					display: inline-block;
+					.width(60);
+					.height(5);
+					.top(47);
+					.left(20);
+					background: #ccc;
+				}
+				.bar-y{
+					position: absolute;
+					display: inline-block;
+					.width(5);
+					.height(60);
+					.top(20);
+					.left(47);
+					background: #ccc;
+				}
+			}
+		}
 	}
 
 </style>
@@ -174,9 +212,12 @@
 	**  用了js原生Touch事件,也有Bug(touchmove只执行一次), 解决方法为设置某个区域左右滑动；
 	**/
 
-	import { mapState, mapActions } from 'vuex';
+	import { mapState, mapActions, mapMutations } from 'vuex';
+	import { checkStatus, mixins } from '../common/mixins';
 	export default {
 		name: 'option',
+
+		mixins: [mixins],
 
 		data() {
 			return {
@@ -190,6 +231,12 @@
 		},
 
 		methods: {
+			
+
+			...mapMutations([
+				'OPTIONLISTDATA',
+			]),
+
 			swipeStart(e) {
 				this.startX = e.targetTouches[0].pageX;
 				this.startY = e.targetTouches[0].pageY;
@@ -210,12 +257,26 @@
 				
 			},
 
-			moveTop() {
+			moveTop(symbol, index) {
+				let topSymbol = this.symbol_list.splice(index, 1)[0];
+
+				this.symbol_list.unshift(topSymbol);
+				this.OPTIONLISTDATA(this.symbol_list);
 
 				return this.move = null;	
 			},
 
-			delSymbol() {
+			delSymbol(symbol, index) {
+				let isDel = this.removeSymbol(symbol);
+
+				if (isDel) {
+					let curOptionSymbolList = this.$store.state.symbolList;
+					curOptionSymbolList.splice(index, 1);
+
+					this.symbol_list.splice(index, 1);
+
+					this.OPTIONLISTDATA(curOptionSymbolList);
+				};
 
 				return this.move = null;
 			},
@@ -226,7 +287,6 @@
 		},
 
 		created() {
-
 			this.$store.dispatch('getOptionList', {
 				access_token: this.cookie.get('token'),
 			});
@@ -239,16 +299,19 @@
 				const symbolStompList = this.$store.state.symbolCurrentPrice;
 				// 有个bug   在这里先解决一下
 				for ( let i = 0; i < symbolList.length&&(this.symbol_list.length <= symbolList.length -1); i++ ) {
-					const symbolParam = {
-						name: symbolList[i].quote.name,
-						symbol: symbolList[i].quote.symbol,
-						ask_price: symbolList[i].quote.ask_price[0],
-						bid_price: symbolList[i].quote.bid_price[0],
-						close_price: symbolList[i].close_price,
-						isUp: 1,
-						isBgUp: 1,
-					}
-					this.symbol_list.push(symbolParam);
+					checkStatus(symbolList[i]).then((status)=> {					
+						const symbolParam = {
+							name: symbolList[i].quote.name,
+							symbol: symbolList[i].quote.symbol,
+							ask_price: symbolList[i].quote.ask_price[0],
+							bid_price: symbolList[i].quote.bid_price[0],
+							close_price: symbolList[i].close_price,
+							isUp: 1,
+							isBgUp: 1,
+							close: (status && status.type) == 'close' ? true : false,
+						}
+						this.symbol_list.push(symbolParam);
+					});
 				}
 
 				if ( this.symbol_list.length ) {
@@ -278,12 +341,18 @@
 					return this.symbol_list;
 				}
 			},
-
+			...mapState({
+				list: state=> state.symbolList,
+			}),
 		},
 
 		watch: {
-			price( info ) {
-				
+			list( list ) {
+				// console.log(list)
+			},
+
+			symbol_list(list) {
+
 			}
 		}
 	}

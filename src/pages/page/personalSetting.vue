@@ -180,7 +180,7 @@
 					type: 'POST',
 					data: {
 						access_token: this.cookie.get('token'),
-						invite_code: 'yntma2',
+						invite_code: this.cookie.get('inviteCode'),
 						permission: perm,
 					}
 				}).then(function(data) {

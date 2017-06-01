@@ -6,6 +6,9 @@ import IO from '../service/IO';
 import Cookie from '../pages/lib/cookie';
 import VueTouch from 'vue-touch';
 import Sticky from '../pages/common/sticky';
+import { getType,
+
+    } from '../pages/common/mixins';
 
 Vue.config.debug = true;
 
@@ -52,12 +55,8 @@ router.beforeEach( ( to, from, next )=> {
 });
 
 function isEmptyObject(obj) {
-     for (var key in obj) {
-         return false;
-     }
-     return true;
-}
-
-function getType() {
-    return Cookie.get('type');
+    for (var key in obj) {
+        return false;
+    }
+    return true;
 }
