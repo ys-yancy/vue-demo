@@ -343,7 +343,9 @@
 			},
 			...mapState({
 				list: state=> state.symbolList,
+				type: state=> state.type,
 			}),
+
 		},
 
 		watch: {
@@ -353,6 +355,10 @@
 
 			symbol_list(list) {
 
+			},
+
+			type(type) {
+				// 刷新数据在这里进行
 			}
 		}
 	}

@@ -208,6 +208,7 @@
 		methods: {
 			...mapMutations({
 				setType: 'CHANGETYPE',
+				setIsShowLogin: 'ISSHOWLOGIN',
 			}),
 
 			switchUnfold() {
@@ -228,9 +229,12 @@
 				if ( way === 'demo' ) {
 					this.cur_way = '模拟';
 					this.curSwitch = true;
+					this.setIsShowLogin(false);
+					this.cookie.expire('real_token');
 				} else {
 					this.cur_way = '实盘';
 					this.curSwitch = false;
+					this.setIsShowLogin(true);
 				}
 			},
 
@@ -251,6 +255,7 @@
 			type(type) {
 				this.setType(type);
 				this.cookie.set('type', type);
+				this.setDesc(type);
 			}
 		}
 	}

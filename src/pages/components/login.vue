@@ -1,5 +1,5 @@
 <template>
-	<div class="dialog-login-wrapper-outer" @touchmove.prevent.stop>
+	<div v-if='realToken' class="dialog-login-wrapper-outer" @touchmove.prevent.stop>
 		<div class="dialog-login-wrapper">
 			<div class="title-wrapper">
 				<p class="title">为保证您的实盘账户资金安全,</p>
@@ -9,12 +9,13 @@
 				</span>
 			</div>
 			<div class="input-wrapper">
-				<input type="text" name="" placeholder="请输入交易密码">
+				<input type="text" name="" placeholder="请输入交易密码" v-model='password'>
+				<p v-if='err' class="err">密码错误</p>
 				<!-- <a href="#">切换全键盘输入</a> -->
 			</div>
 			<div class="btn-wrapper">
-				<span class="btn close">使用模拟账户</span>
-				<span class="btn confirm">确认</span>
+				<span class="btn close" @click='close'>使用模拟账户</span>
+				<span class="btn confirm" @click='confirm'>确认</span>
 			</div>
 		</div>
 	</div>
@@ -77,6 +78,13 @@
 					.border(1, solid, #bfb0e9);
 					.border-radius(10);
 					.padding-left(24);
+					outline: 0;
+				}
+				.err{
+					.font-size(20);
+					text-align: left;
+					.padding-left(40);
+					color: red;
 				}
 			}
 			.btn-wrapper{
@@ -112,3 +120,69 @@
 		}
 	}
 </style>
+
+<script type="text/javascript">
+	import { mapMutations } from 'vuex'; 
+	import md5 from '../lib/md5'
+	export default {
+		name: 'login-dialog',
+		data() {
+			return {
+				password: '',
+				err: false,
+			}
+		},
+
+		methods: {
+			...mapMutations({
+				setType: 'CHANGETYPE',
+				setTealToken: 'CHANGETEALTOKEN',
+				setIsShowLogin: 'ISSHOWLOGIN',
+			}),
+
+			close() {
+				this.setType('demo');
+				this.cookie.set('type', 'demo');
+				this.setTealToken('');
+    			this.cookie.expire('real_token');
+    			this.setIsShowLogin(false);
+			},
+
+			confirm() {
+				this.ajax({
+					url: 'v1/user/real/tradepassword/verify/',
+					type: 'POST',
+					data: {
+						access_token: this.cookie.get('token'),
+						password: md5(this.password),
+					}
+				}).then((data)=> {
+    				data = data.data;
+    				if (data.status == 200) {
+    					this.setType('real');
+    					this.cookie.set('type', 'real');
+    					this.cookie.set('real_token',data.data.real_token, {
+    						expires: 60*60*60,
+    					});
+    					this.setTealToken(data.data.real_token);
+    				} else {
+    					this.err = true;
+    				}
+				})
+			}
+		},
+
+		computed: {
+			realToken() {
+				const real_token = this.$store.state.real_token;
+				const isShowLogin = this.$store.state.isShowLogin;
+				if (!real_token && isShowLogin) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+	}
+
+</script>

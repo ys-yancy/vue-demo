@@ -7,6 +7,8 @@ import {
 	USERACCOUNT,
 	ISLOGIN,
 	CHANGETYPE,
+	CHANGETEALTOKEN,
+	ISSHOWLOGIN,
 	WATCHDATALIMT,
 	CURRENTORDERLIMT,
 	HISTORYORDERLIMT,
@@ -24,6 +26,14 @@ export default {
 
 	[CHANGETYPE]( state, type ) {
 		state.type = type;
+	},
+
+	[CHANGETEALTOKEN]( state, real_token ) {
+		state.real_token = real_token;
+	},
+
+	[ISSHOWLOGIN]( state, isShowLogin ) {
+		state.isShowLogin = isShowLogin;
 	},
 
 	[OPTIONLISTDATA]( state, dataList ) {
