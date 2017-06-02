@@ -91,7 +91,7 @@
 							expires: Infinity,
 						});
 
-						this.cookie.set('inviteCode', data.data.data.inviteCode, {
+						this.cookie.set('inviteCode', data.data.data.invite_code, {
 							expires: Infinity,
 						});
 

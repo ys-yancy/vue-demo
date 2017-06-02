@@ -359,6 +359,12 @@
 
 			type(type) {
 				// 刷新数据在这里进行
+				const isShowLogin = this.$store.state.isShowLogin;
+				if (!isShowLogin) {
+					this.$store.dispatch('getOptionList', {
+						access_token: this.cookie.get('token'),
+					});
+				}
 			}
 		}
 	}

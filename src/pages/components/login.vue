@@ -159,14 +159,23 @@
 				}).then((data)=> {
     				data = data.data;
     				if (data.status == 200) {
+
     					this.setType('real');
+
     					this.cookie.set('type', 'real');
+
     					this.cookie.set('real_token',data.data.real_token, {
     						expires: 60*60*60,
     					});
+
     					this.setTealToken(data.data.real_token);
+
+    					this.setIsShowLogin(false);
+
     				} else {
+
     					this.err = true;
+
     				}
 				})
 			}
@@ -176,7 +185,7 @@
 			realToken() {
 				const real_token = this.$store.state.real_token;
 				const isShowLogin = this.$store.state.isShowLogin;
-				if (!real_token && isShowLogin) {
+				if (isShowLogin) {
 					return true;
 				} else {
 					return false;

@@ -234,7 +234,7 @@
 				} else {
 					this.cur_way = '实盘';
 					this.curSwitch = false;
-					this.setIsShowLogin(true);
+					!this.cookie.get('real_token') && this.setIsShowLogin(true);
 				}
 			},
 
