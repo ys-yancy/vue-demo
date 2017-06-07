@@ -13,6 +13,8 @@ import {
 	CURRENTORDERLIMT,
 	HISTORYORDERLIMT,
 	ALLOWFOLLOWINGLIMT,
+	COUNTUSERMARGIN,
+	COUNTDEFAULTVOLUME,
 } from './mutations_types';
 
 export default {
@@ -68,4 +70,10 @@ export default {
 	[ALLOWFOLLOWINGLIMT]( state, limt ) {
 		state.allowFollowingLimt = limt;
 	},
+	[COUNTUSERMARGIN]( state, curOrderMargin ) {
+		state.curOrderMargin = curOrderMargin;
+	},
+	[COUNTDEFAULTVOLUME]( state, volume ) {
+		state.defaultVolume = volume;
+	}
 }

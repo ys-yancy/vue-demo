@@ -15,6 +15,7 @@
 <style lang='less' scoped>
 	@import '../style/variable.less';
 	.pro-trading{
+		background: #160E23;
 		header{
 			color: #fff;
 			.font-size(33);

@@ -18,7 +18,7 @@
 
 		<my-account :bg_color='true'></my-account>
 
-		<my-seclect :selectData='selectData' :curPrice='curPrice'></my-seclect>
+		<my-seclect :selectData='selectData' :curPrice='curPrice' :pip='pip'></my-seclect>
 	</div>
 </template>
 
@@ -74,10 +74,16 @@
 			return {
 				up: false,
 				unit: '',
+				margin: 0,
+				profit: 0,
+				netDeposit: 0,
+				freeMargin: 0,
 				price: {
 					todayPrice: '',
 					yesterdayPrice: '',
 				},
+				defaultVol: 0,
+				pip: 0,
 				instance: '',
 				selectData: '',
 				chartLastData: '',
@@ -179,6 +185,36 @@
 				}, 5000)
 			},
 
+			async getCurrentOrderList() {
+				let ret = await _.getCurrentOrderList({}).then((data)=> {
+					data = data.data.data;
+					for ( let i = 0; i < data.length; i++ ) {
+						this.margin += data[i].margin;
+						this.profit += data[i].profit;
+					}
+					return data
+				});
+				return ret;
+			},
+
+			getDefaultVolume(userAccount, curSymbol) {
+				this.getCurrentOrderList().then((data) => {
+					const type = this.cookie.get('type');
+
+					this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
+					this.freeMargin = this.netDeposit - parseFloat(this.margin);
+
+					let params = {
+						symbol: curSymbol,
+						account: userAccount,
+						preparedMargin: this.freeMargin,
+					}
+
+					this.$store.dispatch('countDefaultVolume', params);
+
+				})
+			},
+
 			/**
 		    * 获取交易品种的交易杠杆 (实际上这段代码就是calMarginWithOpenPrice方法中的一部分)
 		    * symbol: 从2.2.2.4 接口获取的symbol对象
@@ -208,6 +244,11 @@
 		created() {
 			this.initChart();
 
+			
+		},
+
+		mounted() {
+			
 		},
 
 		computed: {
@@ -228,6 +269,8 @@
 
 				if ( curSymbol ) {
 					this.unit = curSymbol.policy.min_quote_unit;
+					this.pip = curSymbol.policy.pip;
+					this.getDefaultVolume(userAccount.account, curSymbol);
 				}
 
 				return {

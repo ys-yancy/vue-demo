@@ -55,6 +55,19 @@ export default {
 		});	
 	},
 
+	// 计算占用保证金
+	countUserMargin( {commit, state}, options ) {
+		_.getMargin( options.openPrice, options.symbol, options.volume, options.account ).then(function(margin) {
+			commit('COUNTUSERMARGIN', margin);
+		})
+	},
+
+	countDefaultVolume({commit, state}, options) {
+		_.calVolume(options.symbol, options.account, options.preparedMargin).then(function(volume) {
+			commit('COUNTDEFAULTVOLUME', volume);
+		})
+	},
+
 	// 订阅报价
 	getStompCurrentPrice( {commit, state} ) {
 		let [ login, passcode, host, url ] = 
@@ -63,6 +76,7 @@ export default {
 		onmessage = message => {
 			message = JSON.parse( message.body );
 			const symbolPrice = message.d.split(',');
+			_.price[symbolPrice[0]] = symbolPrice;
 			commit('STOMPCURRENTPRICE', symbolPrice);
 		}
 

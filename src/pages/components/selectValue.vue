@@ -14,23 +14,19 @@
 			<div class="btn-wrapper">
 				<div class="minus btn" @click='set_volume(0)'>-</div>
 				<div class="add btn" @click='set_volume(1)'>+</div>
-				<input type="number" name="" class="num" :value="value">
+				<input type="number" name="" class="num" :value="this.value"/>
 			</div>
 
 			<div class="volume-count-wrapper clearfix">
 				<p class="max-limit">最大可买(手):
-					<span class="max-val">10</span>
+					<span class="max-val">{{ this.maxValume }}</span>
 				</p>
 				<p class="capital">占用资金($):
-					<span class="capital-val">510.0</span>
+					<span class="capital-val">{{ userMargin }}</span>
 				</p>
 				<span class="border"></span>
 			</div>
 
-		</div>
-		
-		<div class="more" @click.stop='switchMore()'>
-			<span></span>
 		</div>
 
 		<div class="fill-data clearfix" v-if='more'>
@@ -66,14 +62,19 @@
 			<p class="ask-price">{{ buy }}</p>
 			买涨</div>
 		</div>
+		<span class="more" @click.stop='switchMore()'>
+			<span></span>
+		</span>
 	</div>
 </template>
 
 <style lang="less">
 	@import '../style/variable.less';
 	.select-val{
+		position: relative;
 		background: #160E23;
 		.width(640);
+		.padding-bottom(156);
 		.select-add{
 			position: relative;
 			.font-size(0);
@@ -162,22 +163,7 @@
 					.top(0);
 					.left(313);
 				}
-			}
-		}
 
-		.more{
-			position: absolute;
-			.width(40);
-			.height(40);
-			.bottom(130);
-			.left(293);
-			.border-radius(50%);
-			background: #564876;
-			span{
-				position: absolute;
-				.top(15);
-				.left(9);
-				.triangle(10,#fff, transparent, transparent, transparent);
 			}
 		}
 
@@ -257,23 +243,24 @@
 				position:absolute;
 				width: 0;
 				.bottom(0);
-				.left(317);
+				.left(313);
 				.border-right(1px, solid, #353244);
 				.height(170);
 			}
 		}
 		.base{
+			position: fixed;
+			.bottom(0);
+			z-index: 10;
 			.width(640);
-			// .height(0);
 			.font-size(30);
 			color: #fff;
-			.padding(30, 50);
-			background: #160E23;
+			.padding(25, 50);
+			background: rgba(22,14,35, .6);
 			&>div{
 				display: inline-block;
 				.width(220);
-				.height(90);
-				// .line-height(90);
+				.height(98);
 				text-align: center;
 				.border-radius(7);
 				.border-bottom(5, solid, #1c5e5d);
@@ -288,44 +275,71 @@
 				}
 			}
 		}
+		.more{
+			position: absolute;
+			z-index: 15;
+			.width(40);
+			.height(40);
+			.bottom(154);
+			.left(294);
+			.border-radius(50%);
+			background: #564876;
+			span{
+				position: absolute;
+				.top(15);
+				.left(9);
+				.triangle(10,#fff, transparent, transparent, transparent);
+			}
+		}
+
 	}
 
 </style>
 
 <script type="text/javascript">
+	import { mapMutations } from 'vuex';
+	import _ from '../../service/page-base';
 	export default {
 		name: '',
 
 		data() {
 			return {
-				value: 1.00,
+				value: 0.00,
 				step: 0.5,
 				minValume: 0.1,
-				maxValume: 6,
+				maxValume: 0.00,
 				symbol: '',
 				more: false,
 				sell_price: '-- --',
 				buy_price: '-- --',
+				openPrice: '--',
+				cur_symbol: '',
+				account: {},
 			}
 		},
 
-		props: ['selectData', 'curPrice'],
+		props: ['selectData', 'curPrice', 'pip'],
 
 		methods: {
+			...mapMutations({
+				changeVolume: 'COUNTDEFAULTVOLUME',
+			}),
 			set_volume(add) {
+				this.step = parseFloat(this.pip);
+
 				if (add) {
 					if ( this.value >= this.maxValume ) {
 						return;
 					}
 					// 有一个小数保留问题待解决
-					this.value = parseFloat(this.value + this.step);
+					this.value = parseFloat(this.value + this.step).toFixed(2);
 				} else {
 					if ( this.value <= this.minValume ) {
 						return;
 					}
-					this.value = parseFloat(this.value - this.step);
+					this.value = parseFloat(this.value - this.step).toFixed(2);
 				}
-				
+				this.changeVolume({maxVolume: this.maxValume, volume: this.value});
 				return this.value;
 			},
 
@@ -362,10 +376,54 @@
 					return this.buy_price ? this.buy_price : '-- --';
 				}
 			},
+
+			defaultVolume() {
+				return this.$store.state.defaultVolume;
+			},
+
+			userMargin() {
+				return parseFloat(this.$store.state.curOrderMargin).toFixed(2);
+			}
+
 		},
 
 		created() {
 			// console.log(this.selectData)
+		},
+
+		watch: {
+			defaultVolume(volume) {
+				const userAccount = this.$store.state.userAccount,
+					  curSymbol = this.$store.state.curSymbolInfoData[0];
+
+				if (volume && volume.volume) {
+
+					this.value = parseFloat(volume.volume);
+
+					this.maxValume = parseFloat(volume.maxVolume);
+
+					if (curSymbol && userAccount) {
+
+						let type = this.cookie.get('type'),
+							symbol = curSymbol.policy.symbol,
+							key = `${type}:${symbol}:curPrice`;
+
+						_.getStore(key).then((data)=> {
+							this.openPrice = ((parseFloat(data.ask_price) + parseFloat(data.bid_price))/2).toFixed(2);
+							let params = {
+								openPrice: this.openPrice,
+								symbol: curSymbol,
+								volume: this.value,
+								account: userAccount.account,
+							}
+
+							this.$store.dispatch('countUserMargin',  params);
+
+						})
+					} 
+				}
+
+			},
 		}
 	}
 </script>
