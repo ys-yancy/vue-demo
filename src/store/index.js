@@ -22,7 +22,7 @@ const state = {
 	historyOrderLimt: 1,
 	allowFollowingLimt: 1,
 	curOrderMargin: 0, //占用保证金
-	defaultVolume: {}, // 默认交易量
+	defaultVolume: null, // 默认交易量
 }
 
 export default new Vuex.Store({

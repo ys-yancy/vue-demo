@@ -270,7 +270,6 @@
 				if ( curSymbol ) {
 					this.unit = curSymbol.policy.min_quote_unit;
 					this.pip = curSymbol.policy.pip;
-					this.getDefaultVolume(userAccount.account, curSymbol);
 				}
 
 				return {
@@ -313,9 +312,9 @@
 				const curSymbol = param.curSymbol,
 					userAccount = param.userAccount;
 				if (curSymbol && userAccount) {
+					// this.getDefaultVolume(userAccount.account, curSymbol);
 					let leverage = this.getLeverage(curSymbol, userAccount.account);
 					curSymbol.leverage = leverage;
-
 					return this.selectData = curSymbol;
 				}
 			}

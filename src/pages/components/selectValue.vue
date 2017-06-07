@@ -14,7 +14,7 @@
 			<div class="btn-wrapper">
 				<div class="minus btn" @click='set_volume(0)'>-</div>
 				<div class="add btn" @click='set_volume(1)'>+</div>
-				<input type="number" name="" class="num" :value="this.value"/>
+				<input type="number" name="" class="num" v-model="value"/>
 			</div>
 
 			<div class="volume-count-wrapper clearfix">
@@ -308,6 +308,10 @@
 				step: 0.5,
 				minValume: 0.1,
 				maxValume: 0.00,
+				margin: 0,
+				profit: 0,
+				netDeposit: 0,
+				freeMargin: 0,
 				symbol: '',
 				more: false,
 				sell_price: '-- --',
@@ -341,6 +345,34 @@
 				}
 				this.changeVolume({maxVolume: this.maxValume, volume: this.value});
 				return this.value;
+			},
+
+			async getCurrentOrderList() {
+				let ret = await _.getCurrentOrderList({}).then((data)=> {
+					data = data.data.data;
+					for ( let i = 0; i < data.length; i++ ) {
+						this.margin += data[i].margin;
+						this.profit += data[i].profit;
+					}
+					return data
+				});
+				return ret;
+			},
+
+			getDefaultVolume(userAccount, curSymbol) {
+				this.getCurrentOrderList().then((data) => {
+					const type = this.cookie.get('type');
+					this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
+					this.freeMargin = this.netDeposit - parseFloat(this.margin);
+
+					let params = {
+						symbol: curSymbol,
+						account: userAccount,
+						preparedMargin: this.freeMargin.toFixed(2),
+					}
+					this.$store.dispatch('countDefaultVolume', params);
+
+				})
 			},
 
 			switchMore() {
@@ -378,12 +410,19 @@
 			},
 
 			defaultVolume() {
-				return this.$store.state.defaultVolume;
+				let curSymbol = this.$store.state.curSymbolInfoData[0];
+				let defaultVolume =  this.$store.state.defaultVolume;
+				
+				return defaultVolume;
+			},
+
+			curSymbolVolume() {
+				return this.$store.state.curSymbolInfoData[0];
 			},
 
 			userMargin() {
 				return parseFloat(this.$store.state.curOrderMargin).toFixed(2);
-			}
+			},
 
 		},
 
@@ -409,7 +448,9 @@
 							key = `${type}:${symbol}:curPrice`;
 
 						_.getStore(key).then((data)=> {
+
 							this.openPrice = ((parseFloat(data.ask_price) + parseFloat(data.bid_price))/2).toFixed(2);
+
 							let params = {
 								openPrice: this.openPrice,
 								symbol: curSymbol,
@@ -424,6 +465,13 @@
 				}
 
 			},
+
+			curSymbol(symbol) {
+				let userAccount = this.$store.state.userAccount;
+				if (symbol && userAccount.account) {
+					this.getDefaultVolume(userAccount.account, symbol);
+				}
+			}
 		}
 	}
 </script>

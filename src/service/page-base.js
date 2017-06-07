@@ -229,7 +229,7 @@ export default {
 		const isDemo = this.isDemo();
 		let accountwrapper = isDemo ? account['demo'] : account['real'];
 
-		const d= new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			// 杠杆
 		    let max_leverage = isDemo ? symbol.policy.demo_max_leverage : symbol.policy.real_max_leverage;
 		    let account = accountwrapper;
@@ -257,7 +257,7 @@ export default {
 			    //     alg = 1;
 			    // }
 
-			    this.getCurrentPrice(trading_home_symbol, true).then((price) => {
+			    this.getCurrentPrice(trading_home_symbol).then((price) => {
 			    	if ( alg == 0 ) {
 			    		if (price && price.bid_price && price.ask_price) {
 				            trading_home_price = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
@@ -269,13 +269,12 @@ export default {
 				            trading_home_price = 1 / trading_home_price;
 				            let marginVal = margin();
 				            resolve(marginVal);
+
 				        } else {
 				            reject();
 				        }
 			    	}
 			    })
-
-
 		    }
 
 		    // 在这里用 function 声明  变量提升
@@ -285,8 +284,6 @@ export default {
 		    }
 
 		})
-
-		return d;
 	},
 
 	/**
@@ -339,8 +336,8 @@ export default {
 
     		let ret = this.getPrice(symbol), price = {};
     		//在这里放到stroage里,  
-    		let key = `${type}:${symbol}:curPrice`
-	    	if (ret[symbol] && ret[symbol] == undefined) {    		
+    		let key = `${type}:${symbol}:curPrice`;
+	    	if (ret['symbol'] == undefined) {    		
 	    		ret.then((data)=> {
 	    			Storage.set(key, data);
 	    			resolve(data)
