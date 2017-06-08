@@ -1,6 +1,8 @@
 import __ from './IO';
 import Cookie from '../pages/lib/cookie';
 import Storage from '../pages/common/storage';
+import Symbol from '../pages/common/symbol';
+import Symbols from '../pages/common/symbols';
 export default {
 	price: {},
 	/*
@@ -36,29 +38,6 @@ export default {
 		Cookie.set('real_group', account.data.data.account.real.group_name);
 
 		return account;
-	},
-
-	// 获取交易页面的symbol
-	async getOptionSymbolList( options ) {
-		options.url = 'v3/' + Cookie.get('type') + '/symbols6/';
-
-		options._r = Math.random();
-
-		const params = {
-			url: options.url,
-			type: "GET",
-			data: {
-				access_token: options.access_token,
-				_r: options._r,
-			},
-		}
-
-		let symbolData = await __.ajax(params);
-
-		//将获取到的symbol存起来
-		this._saveSymbols(symbolData);
-
-		return symbolData;
 	},
 
 	//获取k线图数据
@@ -225,65 +204,63 @@ export default {
 	* account: 从2.2.2.5 接口获取的account对象
 	**/
 
-	getMargin(openPrice, symbol, volume, account) {
+	async getMargin(openPrice, symbol, volume, account) {
 		const isDemo = this.isDemo();
 		let accountwrapper = isDemo ? account['demo'] : account['real'];
+		account = accountwrapper;
 
-		return new Promise((resolve, reject) => {
-			// 杠杆
-		    let max_leverage = isDemo ? symbol.policy.demo_max_leverage : symbol.policy.real_max_leverage;
-		    let account = accountwrapper;
-		    let currency = account.currency;
-		    let trading_leverage = account.leverage * symbol.policy.leverage_multiplier; // 这里的account.leverage是对应demo或者real账户的leverage
+		// 杠杆
+	    let max_leverage = isDemo ? symbol.policy.demo_max_leverage : symbol.policy.real_max_leverage;
+	    let currency = account.currency;
+	    let trading_leverage = account.leverage * symbol.policy.leverage_multiplier; // 这里的account.leverage是对应demo或者real账户的leverage
 
-		    trading_leverage = trading_leverage < max_leverage ? trading_leverage : max_leverage;
+	    trading_leverage = trading_leverage < max_leverage ? trading_leverage : max_leverage;
 
-		    // 品种成交价格
-		    let mid_price = openPrice,
-		    trading_currency = symbol.policy.trading_currency,
-		    trading_home_symbol = trading_currency;
+	    // 品种成交价格
+	    let mid_price = openPrice,
+	    trading_currency = symbol.policy.trading_currency,
+	    trading_home_symbol = trading_currency;
 
-		    let trading_home_price = 0;
+	    let trading_home_price = 0;
 
-		    // 品种trading_currency于账户home_currency的报价
-		    if ( trading_currency == currency ) {
-		    	trading_home_price = 1;
-		    	resolve(margin());
-		    } else {
-		    	trading_home_symbol = trading_currency + currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
-      			let alg = 0;
-      	// 		if (!Symbols.has(trading_home_symbol)) {
-			    //     trading_home_symbol = currency + trading_currency;
-			    //     alg = 1;
-			    // }
+	    // 品种trading_currency于账户home_currency的报价
+	    if ( trading_currency == currency ) {
+	    	trading_home_price = 1;
+	    	return margin()
+	    } else {
+	    	trading_home_symbol = trading_currency + currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
 
-			    this.getCurrentPrice(trading_home_symbol).then((price) => {
-			    	if ( alg == 0 ) {
-			    		if (price && price.bid_price && price.ask_price) {
-				            trading_home_price = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
-				            resolve(margin());
-				        }
-			    	} else {
-			    		if (price && price.bid_price && price.ask_price) {
-				            trading_home_price = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
-				            trading_home_price = 1 / trading_home_price;
-				            let marginVal = margin();
-				            resolve(marginVal);
-
-				        } else {
-				            reject();
-				        }
-			    	}
-			    })
+  			let alg = 0;
+  			if (!Symbols.has(trading_home_symbol)) {
+		        trading_home_symbol = currency + trading_currency;
+		        alg = 1;
 		    }
 
-		    // 在这里用 function 声明  变量提升
-		    function margin() {
-		    	let margin = parseFloat(symbol.policy.lot_size) * volume * parseFloat(mid_price) / (parseFloat(trading_leverage) / parseFloat(trading_home_price));
-		    	return margin;
-		    }
+		    let price = await this.getCurrentPrice(trading_home_symbol);
 
-		})
+	    	if ( alg == 0 ) {
+	    		if (price && price.bid_price && price.ask_price) {
+		            trading_home_price = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
+		            return margin();
+		        }
+	    	} else {
+	    		if (price && price.bid_price && price.ask_price) {
+		            trading_home_price = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
+		            trading_home_price = 1 / trading_home_price;
+		            let marginVal = margin();
+		            return marginVal;
+
+		        } else {
+		            return Promise.reject()
+		        }
+	    	}
+	    }
+
+	    // 在这里用 function 声明  变量提升
+	    function margin() {
+	    	let margin = parseFloat(symbol.policy.lot_size) * volume * parseFloat(mid_price) / (parseFloat(trading_leverage) / parseFloat(trading_home_price));
+	    	return margin;
+	    }
 	},
 
 	/**
@@ -291,66 +268,38 @@ export default {
 	*
    	**/
 
-   	calVolume(symbol, account, preparedMargin) {
-   		return this.calMarginWithMarketPrice(symbol, symbol.policy.min_vol, account).then((margin) => {
-   			account = this.isDemo() ? account.demo : account.real;
+   	async calVolume(symbol, account, preparedMargin) {
+   		let margin = await this.calMarginWithMarketPrice(symbol, symbol.policy.min_vol, account);
+   		account = this.isDemo() ? account.demo : account.real;
+   		let maxMargin = preparedMargin;
+   		preparedMargin = preparedMargin * .1;
+   		let volume = getVolume(preparedMargin);
+		let maxVolume = getVolume(maxMargin);
 
-		    let maxMargin = preparedMargin;
-		    preparedMargin = preparedMargin * .1;
+		return {
+		    volume: volume,
+		    maxVolume: maxVolume
+		};
 
-		    var volume = getVolume(preparedMargin);
-		    var maxVolume = getVolume(maxMargin);
+		function getVolume(hasMargin)  {
+	        // 不够交易最小交易量的情况
+	        if (hasMargin < margin)
+	          return 0;
+	        var vol = hasMargin / margin;
+	        var min_vol = symbol.policy.min_vol;
+	        vol = vol * min_vol;
+	        if (min_vol < 1) {
+	          min_vol = 1 / min_vol;
+	          vol = vol.toFixed(min_vol.toString().length - 1);
+	        } else {
+	          vol = parseInt(vol / min_vol);
+	        }
 
+	        vol = vol > parseFloat(symbol.policy.max_vol) ? symbol.policy.max_vol : vol;
 
-		    return {
-		        volume: volume,
-		        maxVolume: maxVolume
-		    };
-
-		    function getVolume(hasMargin)  {
-		        // 不够交易最小交易量的情况
-		        if (hasMargin < margin)
-		          return 0;
-		        var vol = hasMargin / margin;
-		        var min_vol = symbol.policy.min_vol;
-		        vol = vol * min_vol;
-		        if (min_vol < 1) {
-		          min_vol = 1 / min_vol;
-		          vol = vol.toFixed(min_vol.toString().length - 1);
-		        } else {
-		          vol = parseInt(vol / min_vol);
-		        }
-
-		        vol = vol > parseFloat(symbol.policy.max_vol) ? symbol.policy.max_vol : vol;
-
-		        return vol;
-		    }
-   		})
+	        return vol;
+		}
    	},
-
-	//获取当前品种的价格
-	getCurrentPrice(symbol) {
-		return new Promise(( resolve, reject ) => {
-
-			let type = this.isDemo() ? 'demo' : 'real';
-
-    		let ret = this.getPrice(symbol), price = {};
-    		//在这里放到stroage里,  
-    		let key = `${type}:${symbol}:curPrice`;
-	    	if (ret['symbol'] == undefined) {    		
-	    		ret.then((data)=> {
-	    			Storage.set(key, data);
-	    			resolve(data)
-	    			
-	    		})
-	    	} else {
-	    		Storage.set(key, ret);
-	    		resolve(ret)
-
-	    	}
-
-		})
-	},
 
 	/**
    	* 输入交易账户, 交易品种, 交易量, 按当前市场价格计算占用保证金
@@ -359,42 +308,24 @@ export default {
    	* account: 从2.2.2.5 接口获取的account对象
    	**/
 
-   	calMarginWithMarketPrice(symbol, volume, account) {
-   		return this.getCurrentPrice(symbol.policy.symbol, true).then((price) => {
-	      	// var midPirce = price.price === '--' ? 0 : (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
-	      	var midPirce = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
-	      	return this.getMargin(midPirce, symbol, volume, account);
-	    });
+   	async calMarginWithMarketPrice(symbol, volume, account) {
+   		let price = await this.getCurrentPrice(symbol.policy.symbol, true);
+   		let midPirce = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
+   		let margin = await this.getMargin(midPirce, symbol, volume, account);
+   		return margin;
    	},
 
-	// 
-	_saveSymbols(data) {
-		let listSymbols = [],
-			type = Cookie.get('type'),
-			token = Cookie.get('token'),
-			key = `${token}:${type}:symbols`;
-		data = data.data.data;
-		for ( let i = 0; i < data.length; i++ ) {
-			listSymbols.push(data[i].policy.symbol);
-		}
-		Storage.set(key, listSymbols);
+   	//获取当前品种的价格
+	async getCurrentPrice(symbol) {
+		let type = this.isDemo() ? 'demo' : 'real';
+		let ret = await this._getPrice(symbol), price = {};
+		//在这里放到stroage里,  
+		let key = `${type}:${symbol}:curPrice`;
+		Storage.set(key, ret);
+    	return ret;
 	},
 
-	getStorageSymbols() {
-		let type = Cookie.get('type'),
-			token = Cookie.get('token'),
-			key = `${token}:${type}:symbols`;
-		return Storage.get(key);
-	},
-
-	getStore(key) {
-		return new Promise(function( resolve, reject ) {
-			const val = Storage.get(key);
-			resolve(JSON.parse(val));
-		})
-	},
-
-	getPrice(symbol) {
+	async _getPrice(symbol) {
 		let type = Cookie.get('type')
 		let curPrice = this.price[symbol];
 		//  如果stomp 推下来
@@ -408,28 +339,34 @@ export default {
 		}
 
 		// 从v2/price取价格
-		let cur_symbol = `quote.${type}_default.${symbol}`;
-		
-		return __.ajax({
+		let symbol_price = Symbol.getQuoteKeys();
+		let params = {
 			url: 'http://price.invhero.com/v2/price/current',
 			type: 'GET',
 			data: {
-				symbol: cur_symbol,
+				symbol: symbol_price,
 			},
 			unjoin: true,
-		}).then((data) => {
-			data = data.data.data[0];
-			if (data == undefined) {
-				return {}
-			}
-			return {
-				symbol: data.symbol,
-				ask_price: data.ask_price[0],
-				bid_price: data.bid_price[0],
-				received_time: data.received_time,
-			}
-		})
+		}
 
+		let data = await __.ajax(params);
+		data = data.data.data;
+
+		for ( let i = 0; i < data.length; i++ ) {
+			if ( data[i].symbol == symbol ) {
+				return {
+					symbol: data.symbol,
+					ask_price: data[i].ask_price[0],
+					bid_price: data[i].bid_price[0],
+					received_time: data[i].received_time,
+				}
+			}
+		}
+	},
+
+	async getStore(key) {
+		const val = Storage.get(key);
+		return JSON.parse(val);
 	},
 
 	isDemo() {
@@ -440,7 +377,4 @@ export default {
 			return false;
 		}
 	},
-
-
-
 }

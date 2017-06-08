@@ -125,7 +125,6 @@
 </style>
 
 <script type="text/javascript">
-	import _ from '../../service/page-base';
 	export default {
 		name: 'currentOrder',
 
@@ -137,7 +136,7 @@
 
 		methods: {
 			async getCurrentOrderList() {
-				let list = await _.getCurrentOrderList({}).then((data)=> {
+				let list = await this.$PB.getCurrentOrderList({}).then((data)=> {
 					data = data.data.data;
 					this.order_list = data;
 				});

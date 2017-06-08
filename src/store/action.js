@@ -1,5 +1,5 @@
 import _ from '../service/page-base';
-import F from '../pages/lib/frame';
+import symbol from '../pages/common/symbol';
 export default {
 	// 获取账户信息
 	getAccount( {commit, state} ) {
@@ -11,7 +11,7 @@ export default {
 	// 获取交易页面的symbol
 	getOptionList( {commit, state}, options ) {
 		// axios.get('http://newapi.invhero.com/v3/demo/symbols6/?access_token=d4ea901c-66d4-404f-ae2b-ed5220bbdd32&_f=0.7636744918061493')
-		_.getOptionSymbolList(options).then(function( optionList ) {
+		symbol.getOptionSymbolList(options).then(function( optionList ) {
 			commit('OPTIONLISTDATA', optionList.data.data);	
 		})	
 	},
@@ -70,33 +70,11 @@ export default {
 
 	// 订阅报价
 	getStompCurrentPrice( {commit, state} ) {
-		let [ login, passcode, host, url ] = 
-			[ 'gooduser', 'passwd1', 'localhost', 'ws://rtprice.invhero.com:61613/stomp' ];
-
-		onmessage = message => {
-			message = JSON.parse( message.body );
-			const symbolPrice = message.d.split(',');
+		const onmessage_callback = symbolPrice => {
 			_.price[symbolPrice[0]] = symbolPrice;
 			commit('STOMPCURRENTPRICE', symbolPrice);
 		}
-
-		const connect_callback = message => {
-			console.log('Stomp连接成功！');
-			const symbols = JSON.parse(_.getStorageSymbols());
-
-			for ( let i = 0; i < symbols.length; i++ ) {
-				Client.subscribe('quote.' + 'real_default.' + symbols[i] +'?format=v2&throttle=1', onmessage)
-			}
-			
-		}
-
-		const error_callback = err => {
-			console.log('Stomp连接失败！')
-		}
-
-		F.client && F.client.disconnect();
-		const Client = Stomp.client(url);
-		Client.connect(login, passcode, connect_callback, error_callback, host);
+		symbol.getStompCurrentPrice(onmessage_callback);
 	},
 
 }

@@ -127,7 +127,6 @@
 </style>
 
 <script type="text/javascript">
-	import _ from '../../service/page-base';
 	import vScroll from '../components/scroll';
 	export default {
 		name: 'currentOrder',
@@ -143,18 +142,14 @@
 
 		methods: {
 			async getHistoryOrderList(calBack) {
-				let list = await _.getHistoryOrderList({page: this.page}).then((data)=> {
-
-					data = data.data.data;
-
-					//  不是这样的  目前只是为了实现效果
-					if (!data.length) {
-						return
-					}
-					
-
-					this.order_list = data;
-				});
+				let data = await this.$PB.getHistoryOrderList({page: this.page})
+				data = data.data.data;
+				//  不是这样的  目前只是为了实现效果
+				if (!data.length) {
+					return
+				}
+				
+				this.order_list = data;
 
 				if (calBack) {
 					setTimeout(()=> {

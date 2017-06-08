@@ -249,7 +249,6 @@
 
 <script type="text/javascript">
 	import Util from '../common/util';
-	import _ from '../../service/page-base';
 	import myHeader from '../components/header.vue';
 	import myMixinAreaChart from '../common/initAreaChart';
 	export default {
@@ -267,18 +266,17 @@
 
 		methods: {
 			async getOrderTicketList() {
-				let list = await this.ajax({
+				let params = {
 					url: 'v1/order/' + this.routeParams.order,
 					type: 'GET',
 					data: {
 						access_token: this.cookie.get('token'),
 						_r: Math.random(),
 					}
-				}).then((data)=> {
-					this.ticketParams = data.data.data;
-					
-					return this.ticketParams;
-				})
+				}
+				let data = await this.ajax(params);
+				this.ticketParams = data.data.data;			
+				return this.ticketParams;
 			},
 
 			async getAreaChartSymbolList() {
@@ -289,7 +287,7 @@
 					group_name: 'b2b_demo_0',
 				}
 
-				let symbolList = await _.getStockSymbolList(params);
+				let symbolList = await this.$PB.getStockSymbolList(params);
 				let data = symbolList.data.data.price;
 
         		var count = 0;

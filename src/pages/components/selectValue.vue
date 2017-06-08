@@ -298,7 +298,6 @@
 
 <script type="text/javascript">
 	import { mapMutations } from 'vuex';
-	import _ from '../../service/page-base';
 	export default {
 		name: '',
 
@@ -348,7 +347,7 @@
 			},
 
 			async getCurrentOrderList() {
-				let ret = await _.getCurrentOrderList({}).then((data)=> {
+				let ret = await this.$PB.getCurrentOrderList({}).then((data)=> {
 					data = data.data.data;
 					for ( let i = 0; i < data.length; i++ ) {
 						this.margin += data[i].margin;
@@ -360,19 +359,41 @@
 			},
 
 			getDefaultVolume(userAccount, curSymbol) {
-				this.getCurrentOrderList().then((data) => {
-					const type = this.cookie.get('type');
-					this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
-					this.freeMargin = this.netDeposit - parseFloat(this.margin);
+				let data = this.getCurrentOrderList();
+				const type = this.cookie.get('type');
+				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
+				this.freeMargin = this.netDeposit - parseFloat(this.margin);
 
-					let params = {
-						symbol: curSymbol,
-						account: userAccount,
-						preparedMargin: this.freeMargin.toFixed(2),
-					}
-					this.$store.dispatch('countDefaultVolume', params);
+				let params = {
+					symbol: curSymbol,
+					account: userAccount,
+					preparedMargin: this.freeMargin.toFixed(2),
+				}
+				this.$store.dispatch('countDefaultVolume', params);
+			},
 
-				})
+			async changeDefaultVolume(userAccount, curSymbol, volume) {
+				if (volume && volume.volume) {
+					this.value = parseFloat(volume.volume);
+					this.maxValume = parseFloat(volume.maxVolume);
+
+					if (curSymbol && userAccount) {
+						let type = this.cookie.get('type'),
+							symbol = curSymbol.policy.symbol,
+							key = `${type}:${symbol}:curPrice`;
+
+						let price = await this.$PB.getStore(key);
+						this.openPrice = ((parseFloat(price.ask_price) + parseFloat(price.bid_price))/2).toFixed(2);
+
+						let params = {
+							openPrice: this.openPrice,
+							symbol: curSymbol,
+							volume: this.value,
+							account: userAccount.account,
+						}
+						this.$store.dispatch('countUserMargin',  params);
+					} 
+				}
 			},
 
 			switchMore() {
@@ -431,39 +452,10 @@
 		},
 
 		watch: {
-			defaultVolume(volume) {
-				const userAccount = this.$store.state.userAccount,
-					  curSymbol = this.$store.state.curSymbolInfoData[0];
-
-				if (volume && volume.volume) {
-
-					this.value = parseFloat(volume.volume);
-
-					this.maxValume = parseFloat(volume.maxVolume);
-
-					if (curSymbol && userAccount) {
-
-						let type = this.cookie.get('type'),
-							symbol = curSymbol.policy.symbol,
-							key = `${type}:${symbol}:curPrice`;
-
-						_.getStore(key).then((data)=> {
-
-							this.openPrice = ((parseFloat(data.ask_price) + parseFloat(data.bid_price))/2).toFixed(2);
-
-							let params = {
-								openPrice: this.openPrice,
-								symbol: curSymbol,
-								volume: this.value,
-								account: userAccount.account,
-							}
-
-							this.$store.dispatch('countUserMargin',  params);
-
-						})
-					} 
-				}
-
+			async defaultVolume(volume) {
+				const userAccount = this.$store.state.userAccount;
+				const curSymbol = this.$store.state.curSymbolInfoData[0];
+				this.changeDefaultVolume(userAccount, curSymbol, volume);
 			},
 
 			curSymbol(symbol) {

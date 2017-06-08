@@ -62,7 +62,6 @@
 
 <script type="text/javascript">
 	import Util from '../common/util';
-	import _ from '../../service/page-base';
 	import HighStock from '../common/initCharts';
 	import mySeclect from '../components/selectValue';
 	import myInfoBar from '../components/infoBar';
@@ -98,43 +97,36 @@
 		methods: {
 			async getStockList( params = this.params ) {
 				this.stockSymbolList.splice(0);
-				let list = await _.getStockSymbolList(params).then((data)=> {
-            		data = data.data.data.price;
-            		var count = 0, listArr = [];
+				let data = await this.$PB.getStockSymbolList(params);
+        		data = data.data.data.price;
+        		var count = 0, listArr = [];
+        		for ( let i = data.length - 1; i > 0; i-- ) {
+					const item = data[i];
+					++count;
+					this.stockSymbolList.push([
+			          Util.getTime(item.beijing_time),
+			          item.open,
+			          item.high,
+			          item.low,
+			          item.close
+			        ]);
 
-            		for ( let i = data.length - 1; i > 0; i-- ) {
-						const item = data[i];
-						++count;
-						this.stockSymbolList.push([
-				          Util.getTime(item.beijing_time),
-				          item.open,
-				          item.high,
-				          item.low,
-				          item.close
-				        ]);
+			        if ( count > 50 ) {
+			        	break;
+			        }
 
-				        if ( count > 50 ) {
-				        	break;
-				        }
+				}
 
-					}
+				this.stockSymbolList.sort(function(a, b) {
+			        return a[0] > b[0] ? 1 : -1;
+			    });
 
-					this.stockSymbolList.sort(function(a, b) {
-				        return a[0] > b[0] ? 1 : -1;
-				    });
-
-				    this.chartLastData = this.stockSymbolList[this.stockSymbolList.length-1];
-				    this.getInfoData();
-					return this.stockSymbolList;
-
-				}, ()=> {
-
-				});
-
-				return list;
+			    this.chartLastData = this.stockSymbolList[this.stockSymbolList.length-1];
+			    this.getInfoData();
+				return this.stockSymbolList;
 			},
 
-			initChart(index, param = 'm30') {
+			async initChart(index, param = 'm30') {
 				// this.pitchActive = true;
 				const oldIndex = this.pitchActive.indexOf(true);
 
@@ -145,40 +137,33 @@
 
 				this.params.tf = param;
 
-				this.getStockList(this.params).then((data)=> {
+				let data = await this.getStockList(this.params);
 					//create Chart
-					if (this.instance) {
-						HighStock.setChartData(data);
-					}
-   					this.instance = HighStock.initChart(data);	
-
-				},(data)=> {
-					console.log(data)
-				})
+				if (this.instance) {
+					HighStock.setChartData(data);
+				}
+				this.instance = HighStock.initChart(data);	
 			},
 
-			getInfoData(params = this.params) {
-				_.getInfoData(params).then((data)=> {
+			async getInfoData(params = this.params) {
+				let data = await this.$PB.getInfoData(params);
 					
-					data = data.data.data.price;
+				data = data.data.data.price;
 
-					const priceData = data.slice(data.length - 2);
+				const priceData = data.slice(data.length - 2);
 
-					//后续优化方向
-					this.price.todayPrice = priceData[1],
-      				this.price.yesterdayPrice = priceData[0];
+				//后续优化方向
+				this.price.todayPrice = priceData[1],
+  				this.price.yesterdayPrice = priceData[0];
 
-      				//不清楚unit什么意思，暂时给2
+  				//不清楚unit什么意思，暂时给2
+  				if (this.price.todayPrice) {
+  					this.price.todayPrice.unit = this.unit ? this.unit : 2;
+  					this.price.todayPrice.close = this.price.yesterdayPrice.close;
+  					this.price.todayPrice.price = this.chartLastData[4]&&this.chartLastData[4];
+  				}
 
-      				if (this.price.todayPrice) {
-      					this.price.todayPrice.unit = this.unit ? this.unit : 2;
-      					this.price.todayPrice.close = this.price.yesterdayPrice.close;
-      					this.price.todayPrice.price = this.chartLastData[4]&&this.chartLastData[4];
-      				}
-
-      				this.up = this.price.todayPrice.price - this.price.todayPrice.close > 0 ? true : false;
-
-				});
+  				this.up = this.price.todayPrice.price - this.price.todayPrice.close > 0 ? true : false;
 
 				setTimeout(()=> {
 					this.getInfoData();
@@ -186,33 +171,30 @@
 			},
 
 			async getCurrentOrderList() {
-				let ret = await _.getCurrentOrderList({}).then((data)=> {
-					data = data.data.data;
-					for ( let i = 0; i < data.length; i++ ) {
-						this.margin += data[i].margin;
-						this.profit += data[i].profit;
-					}
-					return data
-				});
-				return ret;
+				let data = await this.$PB.getCurrentOrderList({})
+				data = data.data.data;
+				for ( let i = 0; i < data.length; i++ ) {
+					this.margin += data[i].margin;
+					this.profit += data[i].profit;
+				}
+				return data
+
 			},
 
-			getDefaultVolume(userAccount, curSymbol) {
-				this.getCurrentOrderList().then((data) => {
-					const type = this.cookie.get('type');
+			async getDefaultVolume(userAccount, curSymbol) {
+				let data = await this.getCurrentOrderList();
+				const type = this.cookie.get('type');
 
-					this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
-					this.freeMargin = this.netDeposit - parseFloat(this.margin);
+				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
+				this.freeMargin = this.netDeposit - parseFloat(this.margin);
 
-					let params = {
-						symbol: curSymbol,
-						account: userAccount,
-						preparedMargin: this.freeMargin,
-					}
+				let params = {
+					symbol: curSymbol,
+					account: userAccount,
+					preparedMargin: this.freeMargin,
+				}
 
-					this.$store.dispatch('countDefaultVolume', params);
-
-				})
+				this.$store.dispatch('countDefaultVolume', params);
 			},
 
 			/**
