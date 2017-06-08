@@ -73,7 +73,7 @@ export default {
 		const onmessage_callback = symbolPrice => {
 			_.price[symbolPrice[0]] = symbolPrice;
 			commit('STOMPCURRENTPRICE', symbolPrice);
-		}
+		}	
 		symbol.getStompCurrentPrice(onmessage_callback);
 	},
 

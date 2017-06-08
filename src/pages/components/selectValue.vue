@@ -404,6 +404,7 @@
 
 		computed: {
 			curSymbol() {
+				// console.log(encodeURIComponent('sell stop'))
 				if ( this.selectData ) {
 					return this.selectData;
 				} else {

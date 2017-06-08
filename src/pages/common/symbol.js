@@ -28,6 +28,7 @@ export default {
 	},
 
 	getStompCurrentPrice(onmessage_callback) {
+
 		let [ login, passcode, host, url ] = 
 			[ 'gooduser', 'passwd1', 'localhost', 'ws://rtprice.invhero.com:61613/stomp' ];
 
@@ -62,7 +63,6 @@ export default {
 		for ( let i = 0; i < symbols.length; i++ ) {
 			cache[symbols[i].policy.symbol] = symbols[i];
 		}
-
 		this._saveLocal(cache);
 	},
 
@@ -76,7 +76,7 @@ export default {
 
 	getQuoteKeys(symbols) {
 		let type = cookie.get('type') === 'demo' ? 'demo' : 'real';
-	    let list = this.get();
+	    let list = Object.keys(this.get());
 	    list = list.map((item, index) => {
 	    	return `quote.${type}_default.${item}`;
 	    });
@@ -95,12 +95,12 @@ export default {
     	} else {
     		mySymbols = {}
     	}
-
     	Object.keys(cache).forEach((key, index) => {
     		if (!mySymbols[key]) {
     			mySymbols[key] = cache[key]
     		}
     	})
+    	storage.set(key, mySymbols);
 	},
 
 }
