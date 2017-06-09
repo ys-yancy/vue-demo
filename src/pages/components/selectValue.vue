@@ -30,9 +30,9 @@
 		</div>
 
 		<div class="fill-data clearfix" v-if='more'>
-			<div class="set-guadan clearfix">
+			<div class="set-guadan clearfix" @click='switchGuadan'>
 				<div class="icon-wrap">
-					<span class="set-icon clearfix"></span>
+					<span class="set-icon clearfix" :class='{ guandan: isGuadan, no_guadan: !isGuadan }'></span>
 					挂单
 				</div>
 			</div>
@@ -189,7 +189,11 @@
 						.height(50);
 						.margin-right(20);
 						float: left;
-						background: red;
+						background: url(../img/pro-trading-guadan-close.png) 0 0 no-repeat;
+						.background-size(91,49);
+						&.guandan{
+							background: url(../img/pro-trading-guadan-open.png) 0 0 no-repeat;
+						}
 					}
 				}
 			}
@@ -313,6 +317,7 @@
 				freeMargin: 0,
 				symbol: '',
 				more: false,
+				isGuadan: false,
 				sell_price: '-- --',
 				buy_price: '-- --',
 				openPrice: '--',
@@ -344,6 +349,10 @@
 				}
 				this.changeVolume({maxVolume: this.maxValume, volume: this.value});
 				return this.value;
+			},
+
+			switchGuadan() {
+				this.isGuadan = this.isGuadan ? false : true;
 			},
 
 			async getCurrentOrderList() {
