@@ -315,6 +315,96 @@ export default {
    		return margin;
    	},
 
+   	/**
+   	* 传入价格信息, 计算对应的止盈止损的金额, 用户下单UI
+   	* account 账户对象
+    * cmd 交易类型 buy 或者 sell
+    * symbol 商品对象
+    * volume 交易量, 例如0.02
+    * openPrice 开仓价格, 例如EURUSD开仓 1.10233
+    * stopLoss 止损价格, 例如EURUSD止损 1.08000
+    * takeProfit 止盈价格, 例如EURUSD止盈 1.20000
+    *
+    **/
+
+    async calMoney(account, symbol, volume, openPrice, stopLoss, takeProfit) {
+	    // 开仓价格与当前价格的价差, cmd还有挂单的可能性, 但是挂单没有浮动盈亏
+	    let stoploss_price_delta = 0;
+	    let takeprofit_price_delta = 0;
+
+	    // 品种trading_currency于账户home_currency的报价
+	    let trading_currency = symbol.policy.trading_currency;
+	    let trading_home_price = 0;
+	    account = this.isDemo() ? account.demo : account.real;
+
+	    if (stopLoss != 0) {
+	      	stoploss_price_delta = stopLoss - openPrice;
+		    if (stoploss_price_delta > 0) {
+		        stoploss_price_delta = 0 - stoploss_price_delta;
+		    }
+	      /*
+	      if (symbol.cmd == 'buy') {
+	          stoploss_price_delta = stopLoss - openPrice;
+	      } else {
+	          stoploss_price_delta = openPrice - stopLoss;
+	      }
+	      */
+	    }
+
+	    if (takeProfit != 0) {
+		    takeprofit_price_delta = takeProfit - openPrice;
+		    if (takeprofit_price_delta < 0) {
+		        takeprofit_price_delta = 0 - takeprofit_price_delta;
+		    }
+		      /*
+		      if (symbol.cmd == 'buy') {
+		          takeprofit_price_delta = takeProfit - openPrice;
+		      } else {
+		          takeprofit_price_delta = openPrice - takeProfit;
+		      }
+		      */
+	    }
+
+	    if (trading_currency == account.currency) { //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
+	      trading_home_price = 1;
+	      return money();
+	    } else {
+	      	var trading_home_symbol = trading_currency + account.currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
+	      	var alg = 0;
+	      	if (!Symbols.has(trading_home_symbol)) {
+	        	trading_home_symbol = account.currency + trading_currency;
+	        	alg = 1;
+	      	}
+
+	    	let price = await this.getCurrentPrice(trading_home_symbol, true);
+
+        	if (alg == 0) {
+        	  	if (price && price.bid_price && price.ask_price) {
+        	    	trading_home_price = (parseFloat(price.bid_price[0]) + parseFloat(price.ask_price[0])) / 2;
+        	    	return money();
+        	  	}
+        	} else {
+        	  	//trading_home_symbol = account.currency + trading_currency;
+        	  	//self.getCurrentPrice(trading_home_symbol, true).then(function(price) {
+        	  	if (price && price.bid_price && price.ask_price) {
+        	    	trading_home_price = (parseFloat(price.bid_price[0]) + parseFloat(price.ask_price[0])) / 2;
+        	    	trading_home_price = 1 / trading_home_price;
+        	    	let moneyVal = money();
+        	    	return moneyVal;
+        	  	} else {
+        	    	return Promise.reject();
+        	  	}
+        	}
+	    };
+
+	    function money() {
+	      return {
+	        takeProfit: parseFloat(takeprofit_price_delta) * parseFloat(symbol.policy.lot_size) * volume * parseFloat(trading_home_price),
+	        stopLoss: parseFloat(stoploss_price_delta) * parseFloat(symbol.policy.lot_size) * volume * parseFloat(trading_home_price)
+	      }
+	    }
+  	},
+
    	//获取当前品种的价格
 	async getCurrentPrice(symbol) {
 		let type = this.isDemo() ? 'demo' : 'real';
@@ -351,7 +441,7 @@ export default {
 
 		let data = await __.ajax(params);
 		data = data.data.data;
-
+		// 有时 v2/price/current 拿不到价格
 		for ( let i = 0; i < data.length; i++ ) {
 			if ( data[i].symbol == symbol ) {
 				return {

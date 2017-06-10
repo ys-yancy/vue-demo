@@ -37,31 +37,44 @@
 				</div>
 			</div>
 			<div class="open-price">
-				<input type="number" name="" value="11">
+				<input type="number" :disabled='!isGuadan' name="" value="">
 			</div>
 		</div>
 
 		<div class="set-price" v-if='more'>
 			<div class="stop-profit">
 				<span>止盈价格:</span>
-				<p><input type="number" value="111"></p>
-				<span>目标盈利($)</span><span class="profit-num">11221</span>
+				<p><input type="number" v-model='takePrice'/></p>
+				<span>目标盈利($)</span><span class="profit-num">{{ take_profit }}</span>
 			</div>
 			<div class="stop-loss">
 				<span>止损价格:</span>
-				<p><input type="number" value="111"></p>
-				<span>预期亏损($)</span><span class="profit-num">0.00</span>
+				<p><input type="number" v-model='stopPrice'></p>
+				<span>预期亏损($)</span><span class="profit-num">{{stop_loss}}</span>
 			</div>
 			<span class="border"></span>
 		</div>
-		<div class="base submit">
-			<div class="sell">
-			<p class="bid-price">{{ sell }}</p>
-			买跌</div>
-			<div class="buy">
-			<p class="ask-price">{{ buy }}</p>
-			买涨</div>
+
+		<div>
+			<div v-if='isClose != null && !isClose' class="base submit">
+				<div class="sell" :class='{ guandan: isGuadan }'>
+					<p class="bid-price">{{ sell }}</p>
+					{{ isGuadan ? '挂单买跌' : '买跌' }}
+				</div>
+				<div class="buy" :class='{ guandan: isGuadan }'>
+					<p class="ask-price">{{ buy }}</p>
+					{{ isGuadan ? '挂单买涨' : '买涨' }}
+				</div>
+			</div>
+
+			<div v-if='isClose != null && isClose' class="base close">
+				<div class="close-wrapper">
+					<p class="desc">{{ symbol_status && symbol_status.tag }}</p>
+					<p class="date">下次开始时间 {{ symbol_status && symbol_status.start }}</p>
+				</div>
+			</div>
 		</div>
+		
 		<span class="more" @click.stop='switchMore()'>
 			<span></span>
 		</span>
@@ -242,6 +255,9 @@
 						.padding-left(24);
 					}
 				}
+				span{
+					.font-size(20);
+				}
 			}
 			&>.border{
 				position:absolute;
@@ -261,7 +277,7 @@
 			color: #fff;
 			.padding(25, 50);
 			background: rgba(22,14,35, .6);
-			&>div{
+			&.submit>div{
 				display: inline-block;
 				.width(220);
 				.height(98);
@@ -276,6 +292,30 @@
 				&:last-child{
 					float:right;
 					background-color: #F9584A;
+				}
+				&.guandan{
+					background: #7b768c;
+				}
+			}
+			.close-wrapper{
+				position: relative;
+				z-index: 10;
+				.width(480);
+				.height(68);
+				.margin-left(30);
+				.border-bottom(3, solid, #32264e);
+				background-color: #473b61;
+				.border-radius(8);
+				.desc{
+					text-align: center;
+					.font-size(26);
+					.padding-top(5);
+				}
+				.date{
+					text-align: center;
+					.font-size(16);
+					.line-height(24);
+					color: #7b768c;
 				}
 			}
 		}
@@ -302,6 +342,7 @@
 
 <script type="text/javascript">
 	import { mapMutations } from 'vuex';
+	import { checkStatus } from '../common/mixins';
 	export default {
 		name: '',
 
@@ -311,6 +352,12 @@
 				step: 0.5,
 				minValume: 0.1,
 				maxValume: 0.00,
+				takePrice: '',
+				stopPrice: '',
+				takeProfit: '0.00',
+				stopLoss: '0.00',
+				symbol_status: null,
+				isClose: null,
 				margin: 0,
 				profit: 0,
 				netDeposit: 0,
@@ -355,6 +402,14 @@
 				this.isGuadan = this.isGuadan ? false : true;
 			},
 
+			// async countTakeProfit() {
+			// 	console.log(this.takePrice)
+			// 	//account, symbol, volume, openPrice, stopLoss, takeProfit
+			// 	// console.log(this.account)
+			// 	// let stopProfit = await this.$PB.calMoney(this.account, this.cur_symbol, this.value, 46.04, 0, 48);
+			// 	// console.log(stopProfit);
+			// },
+
 			async getCurrentOrderList() {
 				let ret = await this.$PB.getCurrentOrderList({}).then((data)=> {
 					data = data.data.data;
@@ -372,7 +427,6 @@
 				const type = this.cookie.get('type');
 				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
 				this.freeMargin = this.netDeposit - parseFloat(this.margin);
-
 				let params = {
 					symbol: curSymbol,
 					account: userAccount,
@@ -403,6 +457,12 @@
 						this.$store.dispatch('countUserMargin',  params);
 					} 
 				}
+			},
+
+			async checkSymbolStatus(account, symbol) {
+				let status = await checkStatus(account, symbol);
+				this.isClose = status.type == 'close' ? true : false;
+				return this.symbol_status = status;
 			},
 
 			switchMore() {
@@ -440,15 +500,35 @@
 				}
 			},
 
-			defaultVolume() {
-				let curSymbol = this.$store.state.curSymbolInfoData[0];
-				let defaultVolume =  this.$store.state.defaultVolume;
-				
-				return defaultVolume;
+			take_profit() {
+				let take_price = this.takePrice;
+				if (!take_price) return '0.00';
+				let ret = this.$PB.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, 0, take_price);
+
+				ret.then((calMoney) => {
+					this.takeProfit = parseFloat(calMoney.takeProfit).toFixed(2);
+					return this.takeProfit;
+				});
+				return this.takeProfit;
 			},
 
-			curSymbolVolume() {
-				return this.$store.state.curSymbolInfoData[0];
+			stop_loss() {
+				let stop_price = this.stopPrice;
+				if (!stop_price) return '0.00';
+				let ret = this.$PB.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, stop_price, 0);
+
+				ret.then((calMoney) => {
+					this.stopLoss = parseFloat(calMoney.stopLoss).toFixed(2);
+					return this.stopLoss;
+				});
+				return this.stopLoss;
+			},
+
+			defaultVolume() {
+				let defaultVolume =  this.$store.state.defaultVolume;
+				this.account = this.$store.state.userAccount.account;
+				this.cur_symbol = this.$store.state.curSymbolInfoData[0];
+				return defaultVolume;
 			},
 
 			userMargin() {
@@ -471,6 +551,7 @@
 			curSymbol(symbol) {
 				let userAccount = this.$store.state.userAccount;
 				if (symbol && userAccount.account) {
+					this.checkSymbolStatus(symbol, userAccount.account);
 					this.getDefaultVolume(userAccount.account, symbol);
 				}
 			}
