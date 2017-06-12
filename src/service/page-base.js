@@ -405,17 +405,151 @@ export default {
 	    }
   	},
 
+  	/**
+    * 传入账户信息, 订单信息, 计算当前持仓的浮动盈亏  1个订单
+    *
+    * @param {Boolean} returnObj 返回每个订单的浮动盈亏  默认返回全部
+    */
+
+    async getFloatingProfit(account, orderList, symbols) {
+      	let orderLen = orderList.length,
+      		mainProfit = 0,
+      		floatList = {},
+      		count = 0,
+      		type = this.isDemo() ? 'demo' : 'real';
+
+		    if (orderLen === 0) {
+		      return 0;
+		    }
+
+    		let groupName = account;
+
+
+
+    	let prices = await this.getCurrentPrice(symbols, 'profit');
+
+    	let optionList = Symbol.get(symbols);
+	    try {
+	        let deferreds = await getProfitList(optionList, prices, orderList);
+	    } catch (e) {}
+    	// $.when.apply($, deferreds).done(function() { // 猜测只要deferreds 有变化就会执行
+       	return ({mainProfit: mainProfit, floatList: floatList || [], prices: prices || []});
+    	// });
+
+	    async function getProfitList(optionList, prices, orderList) {
+	      	let deferreds = [];
+		    for ( let i = 0; i < orderList.length; i++ ) {
+		    	let ret = await getProfit(orderList[i], prices, optionList);
+		    	deferreds.push(ret);
+		    }
+	      	return deferreds;
+	    }
+
+	    async function getProfit(item, prices, optionList) {
+	        let symbol = item.symbol,
+	        	current_price = getPrice(prices, symbol),
+	        	policy = getSym(optionList, symbol).policy;
+
+		    // 如果从服务器没有获得某品种的价格, 那么就不做计算
+		    if (!current_price) {
+		        return 0;
+		    }
+
+	      	// 开仓价格与当前价格的价差, cmd还有挂单的可能性, 但是挂单没有浮动盈亏
+	      	let price_delta = 0;
+	      	if (item.status == 'open' && item.cmd.indexOf('buy') != -1) {
+
+	        	price_delta = current_price.bid_price[0] - item.openPrice;
+
+	      	} else if (item.status == 'open' && item.cmd.indexOf('sell') != -1) {
+
+	        	price_delta = item.openPrice - current_price.ask_price[0];
+	       
+	      	}
+
+	      	// 品种trading_currency于账户home_currency的报价
+	      	let trading_currency = policy.trading_currency;
+	      	let trading_home_price = 0;
+
+	      	if (trading_currency == account[type].currency) { //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
+	        	trading_home_price = 1;
+	        	return (profit(trading_home_price, item))
+	      	} else {
+
+	        	let trading_home_symbol = trading_currency + account[type].currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
+	
+	        	let alg = 0;
+	        	// 提前判断，如果当前品种不在列表里，则转换，减少请求
+	        	if (!Symbols.has(trading_home_symbol)) {
+	        	  	trading_home_symbol = account[type].currency + trading_currency;
+	        	  	alg = 1;
+	        	}
+	
+	        	let temp_price = this.getCurrentPrice(trading_home_symbol, true);
+          		if (alg == 0) {
+            		if (temp_price && temp_price.bid_price) {
+            	  		trading_home_price = parseFloat(temp_price.bid_price[0]);
+	
+            	  		// trading_home_price = (parseFloat(temp_price.bid_price[0]) + parseFloat(temp_price.ask_price[0]) )/ 2;
+            	  		return (profit(trading_home_price, item))
+            		}
+          		} else {
+            		// trading_home_symbol = account[type].currency + trading_currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!
+            		if (temp_price && temp_price.ask_price) {
+	
+            	  		trading_home_price = parseFloat(temp_price.ask_price[0]);
+	
+            	  		// trading_home_price = (parseFloat(temp_price.bid_price[0]) + parseFloat(temp_price.ask_price[0])) / 2;
+            	  		trading_home_price = 1 / trading_home_price;
+            	  		return (profit(trading_home_price, item));
+            		} else {
+            	  		return profit(0, item)
+            		}
+          		}
+	    	}
+
+		    function profit(trading_home_price, item) {
+		        // 只有status=open的订单才需要计算profit
+		        let profitNum = parseFloat(item.profit);
+		        if (item.status == 'open') {
+		          	profitNum = parseFloat(price_delta) * parseFloat(policy.lot_size) * parseFloat(item.volume) * parseFloat(trading_home_price);
+		          	profitNum = profitNum + parseFloat(item.swap || 0) - parseFloat(item.commission || 0);
+		        }
+
+		        floatList[item.ticket] = profitNum;
+		        mainProfit += profitNum;
+		        return profitNum;
+		    }
+	    }
+
+	    function getPrice(prices, symbol) {
+	      	for (let i = 0, len = prices.length; i < len; i++) {	
+	        	if (prices[i].symbol === symbol) {
+	          		return prices[i];
+	        	}
+	      	}
+	    }
+
+	    function getSym(optionList, symbol) {
+	      	for (let i in optionList ) {
+	        	if (optionList[i].policy.symbol == symbol) {
+	          		return optionList[i];
+	        	}
+	      	}
+	    }
+  	},
+
    	//获取当前品种的价格
-	async getCurrentPrice(symbol) {
+	async getCurrentPrice(symbol, all) {
 		let type = this.isDemo() ? 'demo' : 'real';
-		let ret = await this._getPrice(symbol), price = {};
+		let ret = await this._getPrice(symbol, all), price = {};
 		//在这里放到stroage里,  
 		let key = `${type}:${symbol}:curPrice`;
 		Storage.set(key, ret);
     	return ret;
 	},
 
-	async _getPrice(symbol) {
+	async _getPrice(symbol, all) {
 		let type = Cookie.get('type')
 		let curPrice = this.price[symbol];
 		//  如果stomp 推下来
@@ -429,7 +563,10 @@ export default {
 		}
 
 		// 从v2/price取价格
+		// let symbol_price = Symbol.getQuoteKeys(symbol);
+		// 应该用上面的  以后优化
 		let symbol_price = Symbol.getQuoteKeys();
+
 		let params = {
 			url: 'http://price.invhero.com/v2/price/current',
 			type: 'GET',
@@ -441,9 +578,13 @@ export default {
 
 		let data = await __.ajax(params);
 		data = data.data.data;
+		let list = {};
 		// 有时 v2/price/current 拿不到价格
 		for ( let i = 0; i < data.length; i++ ) {
-			if ( data[i].symbol == symbol ) {
+			let symbol = data[i].symbol;
+          	let price = _getPriceObject(data[i]);
+         	list[symbol] = price;
+			if ( data[i].symbol == symbol && all != 'profit' ) {
 				return {
 					symbol: data.symbol,
 					ask_price: data[i].ask_price[0],
@@ -451,6 +592,26 @@ export default {
 					received_time: data[i].received_time,
 				}
 			}
+		}
+
+		if (all == 'profit') {
+			return data;
+		}
+
+		function _getPriceObject(item) {
+		    var p = new Object();
+		    if (!item) {
+		        return '--';
+		    }
+		    if (item.ask_price && item.ask_price.length !== 0) {
+		        p.ask_price = item.ask_price[0];
+		    }
+
+		    if (item.bid_price && item.bid_price.length !== 0) {
+		        p.bid_price = item.bid_price[0];
+		    }
+
+		    return p;
 		}
 	},
 

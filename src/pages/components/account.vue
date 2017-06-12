@@ -15,27 +15,73 @@
 		<span class="transition-l"></span>
 		<span></span>
 
-		<div class="item-wrapper">
+		<div v-if='page == "option" || "proTrading"' class="item-wrapper">
 			<ul :class='{pro: bg_color}'>
 				<li>
-					<p class="J_FreeMargin">402.13</p>
+					<p class="J_FreeMargin">{{ freeMargin }}</p>
 					<p class="desc">可用保证金($)</p>
 				</li>
 				<li>
-					<p class="J_NetDeposit">1184.04</p>
+					<p class="J_NetDeposit">{{ netDeposit }}</p>
 					<p class="desc">账户净值($)</p>
 				</li>
 				<li>
-					<p class="J_FloatProfit">-588.14</p>
+					<p class="J_FloatProfit">{{ profit }}</p>
 					<p class="desc">浮动盈亏($)</p>
 				</li>
 				<li>
-					<p class="J_Rate">129.90</p>
+					<p class="J_Rate">{{ rate }}</p>
 					<p class="desc">保证金比例(%)</p>
 				</li>
 				<li>
-					<p class="J_Bonus">0.00</p>
+					<p class="J_Bonus">{{ bonus }}</p>
 					<p class="desc">保证金增金($)</p>
+				</li>
+			</ul>
+		</div>
+
+		<div v-else-if='page == "curretOrder"' class="item-wrapper">
+			<ul :class='{pro: bg_color}'>
+				<li>
+					<p class="J_FloatProfit">{{ profit }}</p>
+					<p class="desc">浮动盈亏($)</p>
+				</li>
+				<li>
+					<p class="J_FreeMargin">{{ freeMargin }}</p>
+					<p class="desc">可用保证金($)</p>
+				</li>
+				<li>
+					<p class="J_NetDeposit">{{ netDeposit }}</p>
+					<p class="desc">账户净值($)</p>
+				</li>
+				<li>
+					<p class="J_Rate">{{ rate }}</p>
+					<p class="desc">保证金比例(%)</p>
+				</li>
+				<li>
+					<p class="J_Bonus">{{ bonus }}</p>
+					<p class="desc">保证金增金($)</p>
+				</li>
+			</ul>
+		</div>
+
+		<div v-else-if='page == "historyOrder"' class="item-wrapper history-wrapper">
+			<ul :class='{pro: bg_color}'>
+				<li>
+					<p class="J_FloatProfit">{{ historyProfit }}</p>
+					<p class="desc">累计盈利($)</p>
+				</li>
+				<li>
+					<p class="J_Deal">{{ dealCount }}</p>
+					<p class="desc">累计交易(笔)</p>
+				</li>
+				<li>
+					<p class="J_Balance">{{ accBalance }}</p>
+					<p class="desc">账户余额($)</p>
+				</li>
+				<li>
+					<p class="J_NetDeposit">{{ netDeposit }}</p>
+					<p class="desc">账户净值($)</p>
 				</li>
 			</ul>
 		</div>
@@ -171,6 +217,11 @@
 					}
 				}
 			}
+			&.history-wrapper{
+				ul{
+					.width(890);
+				}
+			}
 		}
 		.recharge{
 			position: absolute;
@@ -200,6 +251,15 @@
 				isSwitch: true,
 				cur_way: '模拟',
 				curSwitch: true,
+				historyProfit: '--',
+				accBalance: '--',
+				dealCount: 0,
+				netDeposit: '--',
+				freeMargin: '--',
+				margin: '--', 
+				bait: '--',
+				bonus: '--',
+				rate: '--',
 			}
 		},
 
@@ -238,16 +298,112 @@
 				}
 			},
 
+			async refreshAccount() {
+				let type = this.$getType();
+				let account = this.$store.state.userAccount.account;
+				let orderList = await this._getAccountFromCache();
+				let profitRet = await this.$PB.getFloatingProfit(account, orderList.list, orderList.symbols);
+				// 浮动盈亏
+				let profit = profitRet.mainProfit,
+					floatOption = profitRet.floatList;
+
+				// 账户净值
+				let netDeposit = parseFloat(account[type].balance) + parseFloat(profit);
+				// 可用保证金
+				let freeMargin = netDeposit - parseFloat(orderList.margin);
+
+				let margin = parseFloat(account[type].margin);
+       			let bait = parseFloat(account[type].bait ? account[type].bait : 0);
+       			// 保证金增金
+        		let bonus = parseFloat(account[type].bonus ? account[type].bonus : 0);
+
+        		// 保证金比例
+        		let rate;
+		        if (orderList.margin == 0) {
+		          rate = '--';
+		        }
+		        else if (bonus < margin) {
+		          rate = ((freeMargin + margin) / margin * 100).toFixed(2);
+		        }
+		        else if (bonus >= margin) {
+		          rate = ((freeMargin + margin * 2 - bonus)/margin * 100).toFixed(2);
+		        }
+
+		        this.netDeposit = parseFloat(netDeposit).toFixed(2);
+		        this.freeMargin = parseFloat(freeMargin).toFixed(2);
+		        this.margin = parseFloat(margin).toFixed(2);
+		        this.bait = parseFloat(bait).toFixed(2);
+		        this.bonus = parseFloat(bonus).toFixed(2);
+		        this.rate = parseFloat(rate).toFixed(2);
+		        this.profit = parseFloat(profit).toFixed(2);
+
+		        // 待优化
+		        setTimeout(() => {
+		        	this.refreshAccount()
+		        }, 5000)
+			},
+
+			async refreshHistoryAccount() {
+				const type = this.$getType();
+				const page = this.$route.path;
+				const account = this.$store.state.userAccount.account;
+				if ( page.indexOf('history') === -1 ) {
+					return;
+				}
+				let data = await this.$PB.getHistoryOrderList({});
+				let historyOrderList = data.data.data;
+				this.accBalance = account[type].balance
+				let profit = 0;
+				this.dealCount = historyOrderList.length;
+				historyOrderList.forEach( (item, index) => {
+					profit += parseFloat(item.profit);
+				} )
+				this.accBalance = (this.accBalance + profit).toFixed(2);
+				this.historyProfit = profit.toFixed(2);
+			},
+
+			async _getAccountFromCache() {
+				let orderList = await this.$PB.getCurrentOrderList();
+				orderList = orderList.data.data;
+
+				let margin = 0,
+					profit = 0,
+					symbols = [];
+
+
+				for ( let i = 0; i < orderList.length; i++ ) {
+					let symbol = orderList[i].symbol;
+					if (symbols.indexOf(symbol) === -1) {
+			  		symbols.push(symbol);
+			  		}
+			  		margin += parseFloat(orderList[i].margin);
+			  		profit += parseFloat(orderList[i].profit);
+				}
+				
+				return {
+					list: orderList,
+					symbols: symbols,
+			        margin: margin,
+			        profit: profit,
+				};
+			}
+
 		},
 
 		created() {
 			let type = this.$store.state.type;
 			this.setDesc(type);
+			this.refreshAccount();
 		},
 
 		computed: {
 			type() {
 				return this.$store.state.type;
+			},
+
+			page() {
+				this.refreshHistoryAccount();
+				return this.page = this.$route.path.replace(/\/+/g, '');
 			}
 		},
 

@@ -337,7 +337,6 @@
 							this.$set( this.symbol_list, i, newSymbolParam );
 						}
 					}
-
 					return this.symbol_list;
 				}
 			},

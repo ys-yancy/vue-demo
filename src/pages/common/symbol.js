@@ -40,7 +40,7 @@ export default {
 
 		const connect_callback = message => {
 			console.log('Stomp连接成功！');
-			const symbols = this.get();
+			const symbols = Object.keys(this.get());
 			for ( let i = 0; i < symbols.length; i++ ) {
 				Client.subscribe('quote.' + 'real_default.' + symbols[i] +'?format=v2&throttle=1', onmessage)
 			}
@@ -77,6 +77,9 @@ export default {
 	getQuoteKeys(symbols) {
 		let type = cookie.get('type') === 'demo' ? 'demo' : 'real';
 	    let list = Object.keys(this.get());
+	    if ( symbols ) {
+	    	list = symbols;
+	    }
 	    list = list.map((item, index) => {
 	    	return `quote.${type}_default.${item}`;
 	    });
