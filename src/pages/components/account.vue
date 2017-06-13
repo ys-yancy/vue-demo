@@ -260,6 +260,7 @@
 				bait: '--',
 				bonus: '--',
 				rate: '--',
+				refreshComteoller: null,
 			}
 		},
 
@@ -336,11 +337,10 @@
 		        this.bonus = parseFloat(bonus).toFixed(2);
 		        this.rate = parseFloat(rate).toFixed(2);
 		        this.profit = parseFloat(profit).toFixed(2);
-
 		        // 待优化
-		        setTimeout(() => {
+		        this.refreshComteoller = setTimeout(() => {
 		        	this.refreshAccount()
-		        }, 5000)
+		        }, 1000)
 			},
 
 			async refreshHistoryAccount() {
@@ -386,6 +386,14 @@
 			        margin: margin,
 			        profit: profit,
 				};
+			},
+
+			clearrefreshAccount(page) {
+				let routes = ['option', 'curretOrder', 'historyOrder', 'proTrading'];
+				if ( routes.includes(page) ) {
+					return;
+				}
+				clearTimeout(this.refreshComteoller);
 			}
 
 		},
@@ -394,6 +402,10 @@
 			let type = this.$store.state.type;
 			this.setDesc(type);
 			this.refreshAccount();
+		},
+
+		beforeDestroy() {
+			this.clearrefreshAccount(this.page);
 		},
 
 		computed: {
@@ -412,7 +424,12 @@
 				this.setType(type);
 				this.cookie.set('type', type);
 				this.setDesc(type);
-			}
+			},
+
+			$route(to, from){  
+				//路由响应式参数时才会触发
+	            // this.clearrefreshAccount(this.page);
+	        } 
 		}
 	}
 </script>

@@ -63,6 +63,7 @@ export default {
 
 	// 获取每每一天的数据
 	async getInfoData(options) {
+		// 应该缓存  但是有时间限制
 		const id = options.id, group_name = options.group_name;
 		const params = {
 			url: 'http://price.invhero.com/v3/price/candle/',
@@ -99,6 +100,14 @@ export default {
 
 	// 获取当前订单列表
 	async getCurrentOrderList(options) {
+		let type = Cookie.get('type'),
+			token = Cookie.get('token'),
+			key = `${type}:${token}:curorder`
+
+		let cacheCurOrderList = Storage.get(key);
+		if ( cacheCurOrderList ) {
+			return JSON.parse(cacheCurOrderList);
+		}
 		const params = {
 			url: 'v1/orders/' + Cookie.get('type') + '/current?',
 			type: 'GET',
@@ -109,7 +118,7 @@ export default {
 		}
 
 		let currentOrderList = await __.ajax(params);
-
+		Storage.set(key, currentOrderList);
 		return currentOrderList;
 	},
 
@@ -264,6 +273,25 @@ export default {
 	},
 
 	/**
+   	* 输入交易账户, 交易品种, 交易量, 按当前市场价格计算占用保证金
+   	* symbol: 从2.2.2.4 接口获取的symbol对象
+   	* volume: 交易量, 单位 手(Lot)
+   	* account: 从2.2.2.5 接口获取的account对象
+   	**/
+
+   	async calMarginWithMarketPrice(symbol, volume, account) {
+   		let price = await this.getCurrentPrice(symbol.policy.symbol, true);
+
+   		if ( Array.isArray(price) ) {
+   			price = price[0];
+   		}
+
+   		let midPirce = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
+   		let margin = await this.getMargin(midPirce, symbol, volume, account);
+   		return margin;
+   	},
+
+   	/**
 	* 计算默认交易量, 使用可用保证金的10%算
 	*
    	**/
@@ -275,7 +303,6 @@ export default {
    		preparedMargin = preparedMargin * .1;
    		let volume = getVolume(preparedMargin);
 		let maxVolume = getVolume(maxMargin);
-
 		return {
 		    volume: volume,
 		    maxVolume: maxVolume
@@ -299,20 +326,6 @@ export default {
 
 	        return vol;
 		}
-   	},
-
-	/**
-   	* 输入交易账户, 交易品种, 交易量, 按当前市场价格计算占用保证金
-   	* symbol: 从2.2.2.4 接口获取的symbol对象
-   	* volume: 交易量, 单位 手(Lot)
-   	* account: 从2.2.2.5 接口获取的account对象
-   	**/
-
-   	async calMarginWithMarketPrice(symbol, volume, account) {
-   		let price = await this.getCurrentPrice(symbol.policy.symbol, true);
-   		let midPirce = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
-   		let margin = await this.getMargin(midPirce, symbol, volume, account);
-   		return margin;
    	},
 
    	/**
@@ -427,11 +440,12 @@ export default {
 
 
     	let prices = await this.getCurrentPrice(symbols, 'profit');
-
-    	let optionList = Symbol.get(symbols);
+    	// let optionList = Symbol.get(symbols);
+    	let optionList = Symbol.getOptionSymbols();
 	    try {
 	        let deferreds = await getProfitList(optionList, prices, orderList);
 	    } catch (e) {}
+
     	// $.when.apply($, deferreds).done(function() { // 猜测只要deferreds 有变化就会执行
        	return ({mainProfit: mainProfit, floatList: floatList || [], prices: prices || []});
     	// });
@@ -539,32 +553,30 @@ export default {
 	    }
   	},
 
-   	//获取当前品种的价格
-	async getCurrentPrice(symbol, all) {
+   	//获取当前品种的价格 当前价格是优化的关键
+	async getCurrentPrice(symbol, returnObj) {
 		let type = this.isDemo() ? 'demo' : 'real';
-		let ret = await this._getPrice(symbol, all), price = {};
-		//在这里放到stroage里,  
+		let ret = await this._getPrice(symbol, returnObj);
+		//在这里放到stroage里,  以后改进
 		let key = `${type}:${symbol}:curPrice`;
 		Storage.set(key, ret);
     	return ret;
 	},
 
-	async _getPrice(symbol, all) {
-		let type = Cookie.get('type')
-		let curPrice = this.price[symbol];
-		//  如果stomp 推下来
-		if ( curPrice ) {
-			return {
-				symbol: curPrice[0],
-				ask_price: curPrice[1],
-				bid_price: curPrice[3],
-				received_time: curPrice[7],
-			}
+	async _getPrice(symbol, returnObj) {
+		let type = Cookie.get('type');
+
+		if ( typeof symbol !== 'string' ) {
+			symbol = symbol[0];
+		}
+		let curPrice = Symbol.get(symbol);
+
+		//stomp 推下来
+		if ( curPrice && curPrice.length ) {
+			return curPrice;
 		}
 
 		// 从v2/price取价格
-		// let symbol_price = Symbol.getQuoteKeys(symbol);
-		// 应该用上面的  以后优化
 		let symbol_price = Symbol.getQuoteKeys();
 
 		let params = {
@@ -577,42 +589,31 @@ export default {
 		}
 
 		let data = await __.ajax(params);
-		data = data.data.data;
-		let list = {};
-		// 有时 v2/price/current 拿不到价格
-		for ( let i = 0; i < data.length; i++ ) {
-			let symbol = data[i].symbol;
-          	let price = _getPriceObject(data[i]);
-         	list[symbol] = price;
-			if ( data[i].symbol == symbol && all != 'profit' ) {
-				return {
-					symbol: data.symbol,
-					ask_price: data[i].ask_price[0],
-					bid_price: data[i].bid_price[0],
-					received_time: data[i].received_time,
-				}
-			}
-		}
 
-		if (all == 'profit') {
+		data = data.data.data;
+
+		if (returnObj == 'profit') {
 			return data;
 		}
 
-		function _getPriceObject(item) {
-		    var p = new Object();
-		    if (!item) {
-		        return '--';
-		    }
-		    if (item.ask_price && item.ask_price.length !== 0) {
-		        p.ask_price = item.ask_price[0];
-		    }
+		// 有时 v2/price/current 拿不到价格
+		for ( let i = 0; i < data.length; i++ ) {
+			let params = {
+				symbol: data[i].symbol,
+      			askPrice: data[i].ask_price[0],
+      			bidPrice: data[i].bid_price[0],
+      			lastPrice: data[i].last_price,
+      			bid_price: [data[i].bid_price[0]],
+      			ask_price: [data[i].ask_price[0]],
+			}
 
-		    if (item.bid_price && item.bid_price.length !== 0) {
-		        p.bid_price = item.bid_price[0];
-		    }
+			Symbol.updatePrice(params);
 
-		    return p;
+			if ( data[i].symbol == symbol ) {		
+				return returnObj = params;
+			}
 		}
+		return returnObj;
 	},
 
 	async getStore(key) {

@@ -446,6 +446,11 @@
 							key = `${type}:${symbol}:curPrice`;
 
 						let price = await this.$PB.getStore(key);
+
+						if ( Array.isArray(price) ) {
+							price = price[0]
+						}
+						
 						this.openPrice = ((parseFloat(price.ask_price) + parseFloat(price.bid_price))/2).toFixed(2);
 
 						let params = {

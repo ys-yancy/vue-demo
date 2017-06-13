@@ -101,6 +101,10 @@
 
 						this.cookie.set('type', 'demo');
 
+						this.$store.dispatch('getOptionList', {
+							access_token: data.data.data.token,
+						});
+
 						this.$router.push({ path: 'option' });
 					}
 				})
