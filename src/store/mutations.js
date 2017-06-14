@@ -15,6 +15,7 @@ import {
 	ALLOWFOLLOWINGLIMT,
 	COUNTUSERMARGIN,
 	COUNTDEFAULTVOLUME,
+	CACHECURORDERPRIFIT,
 } from './mutations_types';
 
 export default {
@@ -75,5 +76,10 @@ export default {
 	},
 	[COUNTDEFAULTVOLUME]( state, volume ) {
 		state.defaultVolume = volume;
-	}
+	},
+	// 以后优化
+	[CACHECURORDERPRIFIT]( state, profits ) {
+		state.cacheCurOrderProfit = profits;
+	},
+
 }

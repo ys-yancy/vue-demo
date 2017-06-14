@@ -12,7 +12,10 @@
 					<ul class="attribute detail">
 						<li>
 							<p class="name">盈亏</p>
-							<p class="J_Formate no-guadan down">{{ symbol.profit }}</p>
+							<p class="J_Formate no-guadan down" 
+							:class="{ up: profits[symbol.ticket] > 0, down: profits[symbol.ticket] <= 0 }">
+								{{ profits && profits[symbol.ticket].toFixed(2) || symbol.profit }}
+							</p>
 						</li>
 						<li>
 							<p class="name">当前价格</p>
@@ -49,6 +52,7 @@
 	.current-order{
 		background: #f4f3fb;
 		#J_list{
+			.padding-bottom(260);
 			&>li{
 				position: relative;
 				.height(150);
@@ -99,6 +103,12 @@
 						.width(100);
 						.margin(5, 12);
 						.font-size(20);
+						.down{
+							color: #32d8a3;
+						}
+						.up{
+							color: #f9584a;
+						}
 					}
 				}
 				.guide{
@@ -125,6 +135,7 @@
 </style>
 
 <script type="text/javascript">
+	import { mapState } from 'vuex';
 	export default {
 		name: 'currentOrder',
 
@@ -144,12 +155,18 @@
 			}
 		},
 
+		computed: {
+			...mapState({
+				profits: state => state.cacheCurOrderProfit,
+			})
+		},
+
 		created() {
 			this.getCurrentOrderList();
 		},
 
 		mounted() {
 
-		}
+		},
 	}
 </script>

@@ -471,14 +471,13 @@ export default {
     		let groupName = account;
 
 
-
     	let prices = await this.getCurrentPrice(symbols, 'profit');
+
     	// let optionList = Symbol.get(symbols);
     	let optionList = Symbol.getOptionSymbols();
 	    try {
-	        let deferreds = await getProfitList(optionList, prices, orderList);
+	        let deferreds = await getProfitList.call(this, optionList, prices, orderList);
 	    } catch (e) {}
-
     	// $.when.apply($, deferreds).done(function() { // 猜测只要deferreds 有变化就会执行
        	return ({mainProfit: mainProfit, floatList: floatList || [], prices: prices || []});
     	// });
@@ -486,7 +485,7 @@ export default {
 	    async function getProfitList(optionList, prices, orderList) {
 	      	let deferreds = [];
 		    for ( let i = 0; i < orderList.length; i++ ) {
-		    	let ret = await getProfit(orderList[i], prices, optionList);
+		    	let ret = await getProfit.call(this, orderList[i], prices, optionList);
 		    	deferreds.push(ret);
 		    }
 	      	return deferreds;
@@ -496,7 +495,6 @@ export default {
 	        let symbol = item.symbol,
 	        	current_price = getPrice(prices, symbol),
 	        	policy = getSym(optionList, symbol).policy;
-
 		    // 如果从服务器没有获得某品种的价格, 那么就不做计算
 		    if (!current_price) {
 		        return 0;
@@ -517,40 +515,40 @@ export default {
 	      	// 品种trading_currency于账户home_currency的报价
 	      	let trading_currency = policy.trading_currency;
 	      	let trading_home_price = 0;
-
 	      	if (trading_currency == account[type].currency) { //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
 	        	trading_home_price = 1;
 	        	return (profit(trading_home_price, item))
 	      	} else {
-
-	        	let trading_home_symbol = trading_currency + account[type].currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
 	
+	        	let trading_home_symbol = trading_currency + account[type].currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
+				
 	        	let alg = 0;
 	        	// 提前判断，如果当前品种不在列表里，则转换，减少请求
 	        	if (!Symbols.has(trading_home_symbol)) {
 	        	  	trading_home_symbol = account[type].currency + trading_currency;
 	        	  	alg = 1;
 	        	}
-	
-	        	let temp_price = this.getCurrentPrice(trading_home_symbol, true);
+
+	        	let temp_price = await this.getCurrentPrice(trading_home_symbol, true);
+
           		if (alg == 0) {
             		if (temp_price && temp_price.bid_price) {
             	  		trading_home_price = parseFloat(temp_price.bid_price[0]);
-	
             	  		// trading_home_price = (parseFloat(temp_price.bid_price[0]) + parseFloat(temp_price.ask_price[0]) )/ 2;
             	  		return (profit(trading_home_price, item))
             		}
           		} else {
+
             		// trading_home_symbol = account[type].currency + trading_currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!
             		if (temp_price && temp_price.ask_price) {
 	
             	  		trading_home_price = parseFloat(temp_price.ask_price[0]);
-	
+				
             	  		// trading_home_price = (parseFloat(temp_price.bid_price[0]) + parseFloat(temp_price.ask_price[0])) / 2;
             	  		trading_home_price = 1 / trading_home_price;
             	  		return (profit(trading_home_price, item));
             		} else {
-            	  		return profit(0, item)
+            	  		return (profit(0, item));
             		}
           		}
 	    	}
@@ -562,7 +560,7 @@ export default {
 		          	profitNum = parseFloat(price_delta) * parseFloat(policy.lot_size) * parseFloat(item.volume) * parseFloat(trading_home_price);
 		          	profitNum = profitNum + parseFloat(item.swap || 0) - parseFloat(item.commission || 0);
 		        }
-
+		        // console.log(profitNum)
 		        floatList[item.ticket] = profitNum;
 		        mainProfit += profitNum;
 		        return profitNum;
@@ -598,12 +596,13 @@ export default {
 
 	async _getPrice(symbol, returnObj) {
 		let type = Cookie.get('type');
-
-		if ( typeof symbol !== 'string' ) {
+		// 待优化
+		if ( typeof symbol !== 'string' && returnObj !== 'profit' ) {
 			symbol = symbol[0];
 		}
-		let curPrice = Symbol.get(symbol);
 
+
+		let curPrice = Symbol.get(symbol);
 		//stomp 推下来
 		if ( curPrice && curPrice.length ) {
 			return curPrice;

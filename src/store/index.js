@@ -23,6 +23,7 @@ const state = {
 	allowFollowingLimt: 1,
 	curOrderMargin: 0, //占用保证金
 	defaultVolume: null, // 默认交易量
+	cacheCurOrderProfit: false,
 }
 
 export default new Vuex.Store({

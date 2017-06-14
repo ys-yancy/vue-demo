@@ -102,7 +102,7 @@ export default {
       		// symbols = [symbols];
       		symbols = Array.of(symbols);
     	}
-
+    	
     	symbols.forEach((symbol) => {
 		    if (!this.prices[symbol]) {
 		        all = false;

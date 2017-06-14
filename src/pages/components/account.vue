@@ -270,6 +270,7 @@
 			...mapMutations({
 				setType: 'CHANGETYPE',
 				setIsShowLogin: 'ISSHOWLOGIN',
+				cacheProfits: 'CACHECURORDERPRIFIT',
 			}),
 
 			switchUnfold() {
@@ -303,11 +304,16 @@
 				let type = this.$getType();
 				let account = this.$store.state.userAccount.account;
 				let orderList = await this._getAccountFromCache();
+				// let profitRet = await this.$PB.getFloatingProfit(account, orderList.list, orderList.symbols);
 				let profitRet = await this.$PB.getFloatingProfit(account, orderList.list, orderList.symbols);
 				// 浮动盈亏
-				let profit = profitRet.mainProfit,
+				let prices = profitRet.prices,
+					profit = profitRet.mainProfit,
 					floatOption = profitRet.floatList;
-
+				
+				// 优化  在currentOrder页面应该从stomp中拿, 类似optionlist页面那样
+				// page-base.js 中一些方法应该提到mixins中  在vuex中存一个 stomp 报价即可
+				this.cacheProfits(floatOption);
 				// 账户净值
 				let netDeposit = parseFloat(account[type].balance) + parseFloat(profit);
 				// 可用保证金

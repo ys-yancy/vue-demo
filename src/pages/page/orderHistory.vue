@@ -51,6 +51,7 @@
 	.history-order{
 		background: #f4f3fb;
 		#J_list{
+			.padding-bottom(260);
 			&>li{
 				position: relative;
 				.height(150);
