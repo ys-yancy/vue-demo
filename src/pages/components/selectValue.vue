@@ -342,7 +342,6 @@
 
 <script type="text/javascript">
 	import { mapMutations } from 'vuex';
-	import { checkStatus } from '../common/mixins';
 	export default {
 		name: '',
 
@@ -465,7 +464,7 @@
 			},
 
 			async checkSymbolStatus(account, symbol) {
-				let status = await checkStatus(account, symbol);
+				let status = await this.$PB.checkStatus(account, symbol);
 				this.isClose = status.type == 'close' ? true : false;
 				return this.symbol_status = status;
 			},

@@ -213,7 +213,7 @@
 	**/
 
 	import { mapState, mapActions, mapMutations } from 'vuex';
-	import { checkStatus, mixins } from '../common/mixins';
+	import { mixins } from '../common/mixins';
 	export default {
 		name: 'option',
 
@@ -299,7 +299,7 @@
 				const symbolStompList = this.$store.state.symbolCurrentPrice;
 				// 有个bug   在这里先解决一下
 				for ( let i = 0; i < symbolList.length&&(this.symbol_list.length <= symbolList.length -1); i++ ) {
-					checkStatus(symbolList[i]).then((status)=> {					
+					this.$PB.checkStatus(symbolList[i]).then((status)=> {					
 						const symbolParam = {
 							name: symbolList[i].quote.name,
 							symbol: symbolList[i].quote.symbol,

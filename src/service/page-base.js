@@ -1,5 +1,6 @@
 import __ from './IO';
 import Cookie from '../pages/lib/cookie';
+import Util from '../pages/common/util';
 import Storage from '../pages/common/storage';
 import Symbol from '../pages/common/symbol';
 import Symbols from '../pages/common/symbols';
@@ -203,6 +204,38 @@ export default {
 		let allowFollowingLimt = await __.ajax(params);
 
 		return allowFollowingLimt;
+	},
+
+	/**
+ 	* 判断当前品种状态
+	**/
+	async checkStatus(symbol, account) {
+		let closeTime = symbol.close_time[0];
+    	//let curaccount = this.isDemo() ? account.demo : account.real;
+    	let time = Date.now(), status = {};
+
+    	if (closeTime && time < Util.getTime(closeTime.end) && time > Util.getTime(closeTime.start)) {
+    		status = {
+		        tag: '休市',
+		        className: 'close',
+		        type: 'close',
+		        start: closeTime.end,
+		        closeTime: closeTime.start,
+		        reason: closeTime.reason
+		    };
+		    return status;
+    	} else if (symbol.policy.real_enabled == '0' && symbol.policy.demo_enabled == '0') {
+    		status.tag = '不可交易';
+		    status.type = 'un-trade';
+		    resolve(status);
+    	} else if ( !this.isDemo() && symbol.policy.real_enabled == '0' ) {
+    		status.tag = '限模拟';
+      		status.className = 'simulate';
+      		status.type = 'simulate';
+      		return status;
+    	} else {
+    		return status;
+    	}
 	},
 
 	/**
