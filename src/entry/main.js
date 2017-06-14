@@ -6,7 +6,6 @@ import IO from '../service/IO';
 import Cookie from '../pages/lib/cookie';
 import VueTouch from 'vue-touch';
 import pageBase from '../service/page-base';
-import Sticky from '../pages/common/sticky';
 import { getType,
 
     } from '../pages/common/mixins';
@@ -21,10 +20,6 @@ Vue.prototype.cookie = Cookie;
 
 Object.defineProperty(Vue.prototype, '$PB',{
     value: pageBase,
-});
-
-Object.defineProperty(Vue.prototype, '$sticky',{
-    value: Sticky,
 });
 
 Object.defineProperty(Vue.prototype, '$getType',{

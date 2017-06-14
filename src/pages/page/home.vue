@@ -117,6 +117,7 @@
 </style>
 
 <script type="text/javascript">
+	import { mixins } from '../common/mixins'
 	import myFooter from '../components/footer';
 	import myHeader from '../components/header';
 	import myAccount from '../components/account';
@@ -140,6 +141,8 @@
 				isShortcutShow: false,
 			}
 		},
+
+		mixins: [mixins],
 
 		methods: {
 			hideShortcut() {
@@ -166,7 +169,7 @@
 
 		mounted() {
 			this.$nextTick(function() {
-				new this.$sticky({el: '.nav-list'});
+				this.$_sticky({el: '.nav-list'});
 			})
 			
 		},
