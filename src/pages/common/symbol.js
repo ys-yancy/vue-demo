@@ -4,8 +4,6 @@ import io from '../../service/IO';
 import F from '../lib/frame';
 
 export default {
-	prices: {},
-
 	async getOptionSymbolList( options ) {
 
 
@@ -57,7 +55,6 @@ export default {
           		bid_price: [symbolPrice[3]],
           		ask_price: [symbolPrice[1]],
 			}
-			this.updatePrice(params);
 		};
 
 		const connect_callback = message => {
@@ -93,38 +90,6 @@ export default {
 		this._saveLocal(cache);
 	},
 
-	get(symbols) {
-		let all = true,
-			prices = [],
-    		newSymbols = [];
-
-    	if (typeof symbols === 'string') {
-      		// symbols = [symbols];
-      		symbols = Array.of(symbols);
-    	}
-    	
-    	symbols.forEach((symbol) => {
-		    if (!this.prices[symbol]) {
-		        all = false;
-		    } else {
-		        prices.push(this.prices[symbol]);
-		    }
-
-		    if (symbols.indexOf(symbol) === -1) {
-		        newSymbols.push(symbol);
-		    }
-		});
-
-		if (prices.length === symbols.length && prices.length > 0 && (this._allIn(symbols) || all)) {
-		    return prices;
-		} else {
-		    if (newSymbols.length > 0) {
-		        this._add(newSymbols);
-		    }
-		}
-
-	},
-
 	getQuoteKeys(symbols) {
 		let type = cookie.get('type') === 'demo' ? 'demo' : 'real';
 	    let list = this.getOptionSymbols(true);
@@ -139,13 +104,6 @@ export default {
 
   	},
 
-  	updatePrice(params) {
-  		let symbol = params.symbol;
-    	// 过期时间  以后加过期时间
-    	// params.expired = (new Date()).getTime() + Config.getExpiredTime();
-    	this.prices[symbol] = params;
-  	},
-
   	getOptionSymbols(isKey) {
   		let optionLists = this._getSelfSymbols();
   		if (isKey) {
@@ -154,7 +112,7 @@ export default {
   		return optionLists;
   	},
 
-  	_add(symbols) {
+  	_add(symbols, callback) {
 	    let type = cookie.get('type') === 'demo' ? 'demo' : 'real';
 
 	    let onmessage = (message) => {
@@ -172,6 +130,7 @@ export default {
 	        };
 
 	        this.updatePrice(params);
+	        callback(params);
 	      } catch (e) {}
 	    }
 

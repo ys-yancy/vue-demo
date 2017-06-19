@@ -55,23 +55,19 @@ export default {
 		});	
 	},
 
-	// 计算占用保证金
-	countUserMargin( {commit, state}, options ) {
-		_.getMargin( options.openPrice, options.symbol, options.volume, options.account ).then(function(margin) {
-			commit('COUNTUSERMARGIN', margin);
-		})
-	},
-
-	countDefaultVolume({commit, state}, options) {
-		_.calVolume(options.symbol, options.account, options.preparedMargin).then(function(volume) {
-			commit('COUNTDEFAULTVOLUME', volume);
-		})
-	},
-
 	// 订阅报价
 	getStompCurrentPrice( {commit, state} ) {
 		const onmessage_callback = symbolPrice => {
-			_.price[symbolPrice[0]] = symbolPrice;
+
+			let params = {
+				symbol: symbolPrice[0],
+          		askPrice: symbolPrice[1],
+          		bidPrice: symbolPrice[3],
+          		lastPrice: symbolPrice[5],
+          		bid_price: [symbolPrice[3]],
+          		ask_price: [symbolPrice[1]],
+			}
+			commit('CHAHESTOMPPRICES', params);
 			commit('STOMPCURRENTPRICE', symbolPrice);
 		}	
 		symbol.getStompCurrentPrice(onmessage_callback);

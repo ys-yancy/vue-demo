@@ -243,8 +243,10 @@
 
 <script type="text/javascript">
 	import { mapMutations } from 'vuex';
+	import mixins from '../common/accountMixins';
 	export default {
 		name: 'account',
+		mixins: [mixins],
 		data() {
 			return{
 				unfold: false,
@@ -304,13 +306,12 @@
 				let type = this.$getType();
 				let account = this.$store.state.userAccount.account;
 				let orderList = await this._getAccountFromCache();
-				// let profitRet = await this.$PB.getFloatingProfit(account, orderList.list, orderList.symbols);
-				let profitRet = await this.$PB.getFloatingProfit(account, orderList.list, orderList.symbols);
+				let profitRet = await this.getFloatingProfit(account, orderList.list, orderList.symbols);
 				// 浮动盈亏
 				let prices = profitRet.prices,
 					profit = profitRet.mainProfit,
 					floatOption = profitRet.floatList;
-				
+
 				// 优化  在currentOrder页面应该从stomp中拿, 类似optionlist页面那样
 				// page-base.js 中一些方法应该提到mixins中  在vuex中存一个 stomp 报价即可
 				this.cacheProfits(floatOption);
@@ -346,7 +347,7 @@
 		        // 待优化
 		        this.refreshComteoller = setTimeout(() => {
 		        	this.refreshAccount()
-		        }, 1000)
+		        }, 2000)
 			},
 
 			async refreshHistoryAccount() {

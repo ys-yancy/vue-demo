@@ -342,9 +342,10 @@
 
 <script type="text/javascript">
 	import { mapMutations } from 'vuex';
+	import mixins from '../common/accountMixins'
 	export default {
 		name: '',
-
+		mixins: [mixins],
 		data() {
 			return {
 				value: 0.00,
@@ -377,6 +378,7 @@
 		methods: {
 			...mapMutations({
 				changeVolume: 'COUNTDEFAULTVOLUME',
+				countUserMargin: 'COUNTUSERMARGIN',
 			}),
 			set_volume(add) {
 				this.step = parseFloat(this.pip);
@@ -401,14 +403,6 @@
 				this.isGuadan = this.isGuadan ? false : true;
 			},
 
-			// async countTakeProfit() {
-			// 	console.log(this.takePrice)
-			// 	//account, symbol, volume, openPrice, stopLoss, takeProfit
-			// 	// console.log(this.account)
-			// 	// let stopProfit = await this.$PB.calMoney(this.account, this.cur_symbol, this.value, 46.04, 0, 48);
-			// 	// console.log(stopProfit);
-			// },
-
 			async getCurrentOrderList() {
 				let ret = await this.$PB.getCurrentOrderList({}).then((data)=> {
 					data = data.data.data;
@@ -421,17 +415,13 @@
 				return ret;
 			},
 
-			getDefaultVolume(userAccount, curSymbol) {
+			async getDefaultVolume(userAccount, curSymbol) {
 				let data = this.getCurrentOrderList();
 				const type = this.cookie.get('type');
 				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
 				this.freeMargin = this.netDeposit - parseFloat(this.margin);
-				let params = {
-					symbol: curSymbol,
-					account: userAccount,
-					preparedMargin: this.freeMargin.toFixed(2),
-				}
-				this.$store.dispatch('countDefaultVolume', params);
+				let volume = await this.calVolume(curSymbol, userAccount, this.freeMargin.toFixed(2));		
+				this.changeVolume(volume);
 			},
 
 			async changeDefaultVolume(userAccount, curSymbol, volume) {
@@ -452,13 +442,8 @@
 						
 						this.openPrice = ((parseFloat(price.ask_price) + parseFloat(price.bid_price))/2).toFixed(2);
 
-						let params = {
-							openPrice: this.openPrice,
-							symbol: curSymbol,
-							volume: this.value,
-							account: userAccount.account,
-						}
-						this.$store.dispatch('countUserMargin',  params);
+						let margin = await this.getMargin( this.openPrice, curSymbol, this.value, userAccount.account );
+						this.countUserMargin(margin);
 					} 
 				}
 			},
@@ -507,7 +492,7 @@
 			take_profit() {
 				let take_price = this.takePrice;
 				if (!take_price) return '0.00';
-				let ret = this.$PB.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, 0, take_price);
+				let ret = this.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, 0, take_price);
 
 				ret.then((calMoney) => {
 					this.takeProfit = parseFloat(calMoney.takeProfit).toFixed(2);
@@ -519,7 +504,7 @@
 			stop_loss() {
 				let stop_price = this.stopPrice;
 				if (!stop_price) return '0.00';
-				let ret = this.$PB.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, stop_price, 0);
+				let ret = this.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, stop_price, 0);
 
 				ret.then((calMoney) => {
 					this.stopLoss = parseFloat(calMoney.stopLoss).toFixed(2);
