@@ -9,7 +9,7 @@ Vue.use(Vuex);
 
 const state = {
 	symbolList: [],
-	symbolCurrentPrice: [],
+	symbolCurrentPrice: null,
 	stockSymbolList: [],
 	infoData: [],
 	curSymbolInfoData: '',

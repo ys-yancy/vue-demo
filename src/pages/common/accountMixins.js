@@ -260,7 +260,6 @@ export default {
 	      	if (orderLen === 0) {
 		      	return 0;
 		    }
-
 		    let prices = await this.getCurrentPrice(symbols, 'profit');
 		    let optionList =symbol.getOptionSymbols();
 

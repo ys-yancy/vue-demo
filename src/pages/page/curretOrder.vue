@@ -141,24 +141,25 @@
 
 		data() {
 			return {
-				order_list: '',
+				order_list: null,
 			}
 		},
 
 		methods: {
 			async getCurrentOrderList() {
-				let list = await this.$PB.getCurrentOrderList({}).then((data)=> {
-					data = data.data.data;
-					this.order_list = data;
-				});
-				return this.order_list;
+				let data = await this.$PB.getCurrentOrderList({})
+				let list = data.data.data;
+				return this.order_list = list;
 			}
 		},
 
 		computed: {
 			...mapState({
 				profits: state => state.cacheCurOrderProfit,
-			})
+				price: state => state.cacheCurOrderProfit,
+			}),
+
+
 		},
 
 		created() {
@@ -166,7 +167,12 @@
 		},
 
 		mounted() {
+		},
 
+		watch: {
+			prices(price) {
+				
+			}
 		},
 	}
 </script>
