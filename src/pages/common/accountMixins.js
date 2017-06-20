@@ -1,8 +1,8 @@
 import __ from '../../service/IO';
 import cookie from '../lib/cookie';
 import storage from '../common/storage';
-import symbol from '../common/symbol';
-import symbols from '../common/symbols';
+import Symbol from '../common/symbol';
+import Symbols from '../common/symbols';
 import { mapMutations, mapGetters } from 'vuex';
 export default {
 	data() {
@@ -261,7 +261,7 @@ export default {
 		      	return 0;
 		    }
 		    let prices = await this.getCurrentPrice(symbols, 'profit');
-		    let optionList =symbol.getOptionSymbols();
+		    let optionList =Symbol.getOptionSymbols();
 
 		    try {
 	        	let deferreds = await getProfitList.call(this, optionList, prices, orderList);
@@ -306,16 +306,15 @@ export default {
 		        	trading_home_price = 1;
 		        	return (profit(trading_home_price, item))
 		      	} else {
-		
 		        	let trading_home_symbol = trading_currency + account[type].currency; //这里要根据当前账户类型选择real或者demo!!!!!!!!!!!
 					
 		        	let alg = 0;
+
 		        	// 提前判断，如果当前品种不在列表里，则转换，减少请求
 		        	if (!Symbols.has(trading_home_symbol)) {
 		        	  	trading_home_symbol = account[type].currency + trading_currency;
 		        	  	alg = 1;
 		        	}
-
 		        	let temp_price = await this.getCurrentPrice(trading_home_symbol, true);
 
 	          		if (alg == 0) {
@@ -395,7 +394,7 @@ export default {
 				return curPrice;
 			}
 
-			let symbol_price = symbol.getQuoteKeys();
+			let symbol_price = Symbol.getQuoteKeys();
 			let params = {
 				url: 'http://price.invhero.com/v2/price/current',
 				type: 'GET',
@@ -446,11 +445,11 @@ export default {
 			        newSymbols.push(symbol);
 			    }
 			});
-			if (prices.length === symbols.length && prices.length > 0 && (symbol._allIn(symbols) ||all)) {  
+			if (prices.length === symbols.length && prices.length > 0 && (Symbol._allIn(symbols) ||all)) {  
 			    return prices;
 			} else {
 			    if (newSymbols.length > 0) {
-			        symbol._add(newSymbols, ( params ) => {
+			        Symbol._add(newSymbols, ( params ) => {
 			        	this.addStompPrice(params);
 			        });
 			    }

@@ -2,7 +2,7 @@
 	<div class="history-order">
 	<v-scroll :on-refresh="getHistoryOrderList" :on-infinite="onInfinite">
 		<ul id="J_list" class="list">
-			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol}}' tag='li' v-for=' symbol in order_list ' :key='symbol.name' ref='symbolListNode'>
+			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol, page: "history"}}' tag='li' v-for=' symbol in order_list ' :key='symbol.name' ref='symbolListNode'>
 					<div class="symbol_way" :class='{sell: symbol.cmd != "buy"}'>
 						<span></span>
 					</div>
@@ -50,6 +50,9 @@
 	@import '../style/variable.less';
 	.history-order{
 		background: #f4f3fb;
+		.yo-scroll{
+			background: #fff;
+		}
 		#J_list{
 			.padding-bottom(260);
 			&>li{

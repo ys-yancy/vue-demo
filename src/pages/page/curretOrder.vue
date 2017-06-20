@@ -1,7 +1,7 @@
 <template>
 	<div class="current-order">
 		<ul id="J_list" class="list">
-			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol}}' tag='li' v-for=' symbol in order_list ' :key='symbol.name' ref='symbolListNode'>
+			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol, page: "order"}}' tag='li' v-for='symbol in order_list' :key='symbol.name' ref='symbolListNode'>
 					<div class="symbol_way" :class='{sell: symbol.cmd != "buy"}'>
 						<span></span>
 					</div>
@@ -14,12 +14,12 @@
 							<p class="name">盈亏</p>
 							<p class="J_Formate no-guadan down" 
 							:class="{ up: profits[symbol.ticket] > 0, down: profits[symbol.ticket] <= 0 }">
-								{{ profits && profits[symbol.ticket].toFixed(2) || symbol.profit }}
+								{{ profits && parseFloat(profits[symbol.ticket]).toFixed(2) || symbol.profit }}
 							</p>
 						</li>
 						<li>
 							<p class="name">当前价格</p>
-							<p class="J_Price J_Formate">{{ symbol.openPrice }}</p>
+							<p class="J_Price J_Formate">{{ symbol.price ? symbol.price : symbol.openPrice }}</p>
 						</li>
 						<li>
 							<p class="name">开仓价格</p>
@@ -147,16 +147,37 @@
 
 		methods: {
 			async getCurrentOrderList() {
-				let data = await this.$PB.getCurrentOrderList({})
-				let list = data.data.data;
-				return this.order_list = list;
+				let data = await this.$PB.getCurrentOrderList({});
+				let list = data.data.data,
+					_list = {
+						*[Symbol.iterator]() {
+							yield this;
+						}
+					};
+				for ( let i = 0; i < list.length; i++ ) {
+					let tik = list[i].ticket,
+						key = `${tik}:${list[i].symbol}`;
+					_list[key] = list[i];
+				}
+				return this.order_list = _list;
+			},
+
+			updatePrice(price) {
+				let symbol = price[0],
+					symbol_price = price[3];
+				let orderListSymbols = Object.keys(this.order_list);
+				orderListSymbols.forEach( (item, index) => {
+					if ( item.indexOf(symbol) !== -1 ) {
+						this.order_list[item].price = symbol_price;
+					}
+				});
 			}
 		},
 
 		computed: {
 			...mapState({
 				profits: state => state.cacheCurOrderProfit,
-				price: state => state.cacheCurOrderProfit,
+				price: state => state.symbolCurrentPrice,
 			}),
 
 
@@ -170,8 +191,8 @@
 		},
 
 		watch: {
-			prices(price) {
-				
+			price(price) {
+				this.updatePrice(price);
 			}
 		},
 	}

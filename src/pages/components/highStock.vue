@@ -15,10 +15,14 @@
 				<li class="seclect-btn" :class='{active: pitchActive[5]}' @click="initChart(5, 'd1')">1天</li>
 			</ul>
 		</div>
-
-		<my-account :bg_color='true'></my-account>
-
-		<my-seclect :selectData='selectData' :curPrice='curPrice' :pip='pip'></my-seclect>
+		<!--  账户信息条  -->
+		<my-account v-if='page == "option"' :bg_color='true'></my-account>
+		<!--  下单ui -->
+		<my-seclect v-if='page == "option"' :selectData='selectData' :curPrice='curPrice' :pip='pip'></my-seclect>
+		<!-- 平仓及修改订单ui -->
+		<order-seclect v-else-if='page == "order"'></order-seclect>
+		<!--  历史订单ui -->
+		<history-seclect v-else-if='page == "history"'></history-seclect>
 	</div>
 </template>
 
@@ -64,6 +68,8 @@
 	import Util from '../common/util';
 	import HighStock from '../common/initCharts';
 	import mySeclect from '../components/selectValue';
+	import orderSeclect from '../components/orderValue';
+	import historySeclect from '../components/historyValue';
 	import myInfoBar from '../components/infoBar';
 	import myAccount from '../components/account';
 	export default {
@@ -85,10 +91,12 @@
 				pip: 0,
 				instance: '',
 				selectData: '',
-				chartLastData: '',
+				chartLastData: null,
+				updateController: null,
 				//这一步稍后优化
 				pitchActive: [false, false, false, true, false, false],
 				stockSymbolList: [],
+				page: false,
 			}
 		},
 
@@ -120,7 +128,6 @@
 				this.stockSymbolList.sort(function(a, b) {
 			        return a[0] > b[0] ? 1 : -1;
 			    });
-
 			    this.chartLastData = this.stockSymbolList[this.stockSymbolList.length-1];
 			    this.getInfoData();
 				return this.stockSymbolList;
@@ -138,7 +145,7 @@
 				this.params.tf = param;
 
 				let data = await this.getStockList(this.params);
-					//create Chart
+				//create Chart
 				if (this.instance) {
 					HighStock.setChartData(data);
 				}
@@ -147,7 +154,6 @@
 
 			async getInfoData(params = this.params) {
 				let data = await this.$PB.getInfoData(params);
-					
 				data = data.data.data.price;
 
 				const priceData = data.slice(data.length - 2);
@@ -217,6 +223,29 @@
     			return trading_leverage;
 			},
 
+			updateChart() {
+
+				if ( this.chartLastData ) {
+					let data = this.chartLastData.map( ( item, index ) => {
+						if ( index == 0 ) {
+							return Date.now();
+						} else {
+							return item;
+						}
+					})
+					HighStock.addChartPoint(data);
+				}
+
+				this.updateController = setTimeout( () => {
+					this.updateChart();
+				}, 1000 )
+			},
+
+			changeSelect() {
+				let p = this.$route.query.page;
+				this.page = p;
+			},
+
 		},
 
 		mounted() {
@@ -225,21 +254,20 @@
 
 		created() {
 			this.initChart();
-
-			
+			this.changeSelect();
 		},
 
 		mounted() {
-			
+			this.updateChart();
 		},
 
 		computed: {
 			curPrice() {
 				let subscribe_price = this.$store.state.symbolCurrentPrice,
 					cur_symbol = this.params.symbols,
-					subscribe_symbol = subscribe_price[0];
+					subscribe_symbol = subscribe_price&&subscribe_price[0] ? subscribe_price[0] : false;
 
-				if  ( cur_symbol === subscribe_symbol ) {
+				if  ( subscribe_symbol, cur_symbol === subscribe_symbol ) {
 					return subscribe_price;
 				}
 				return;	
@@ -259,6 +287,10 @@
 					curSymbol,
 				}
 			}
+		},
+
+		beforeDestroy() {
+			clearTimeout(this.updateController);
 		},
 
 		watch: {
@@ -282,8 +314,8 @@
 						this.chartLastData.splice(3, 1, curData3);
 						this.chartLastData.splice(4, 1, curData4);
 
-						//updata the chart lastData
-						HighStock.addChartPoint(this.chartLastData);
+						// updata the chart lastData
+						// HighStock.addChartPoint(this.chartLastData);
 					}	
 				} else {
 					// console.log('else: ' + price)
@@ -306,6 +338,8 @@
 			mySeclect, 
 			myInfoBar,
 			myAccount,
+			orderSeclect,
+			historySeclect,
 		}
 
 	}

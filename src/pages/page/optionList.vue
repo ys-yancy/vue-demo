@@ -1,7 +1,7 @@
 <template>
 	<section class="option-list">
 		<ul id="J_list" class="list">
-			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol}}' tag='li' v-for=' (symbol, index) in symbolList ' :key='symbol.name' ref='symbolListNode'  >
+			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol, page: "option"}}' tag='li' v-for=' (symbol, index) in symbolList ' :key='symbol.name' ref='symbolListNode'  >
 				<div class="symbol_wrapper" :class='{move: move == index}' > <!--class move-->
 				<!-- <div class="symbol_wrapper" :class='{move: move == index}'> -->
 					<div v-if='symbol.close' class="symbol_status">
