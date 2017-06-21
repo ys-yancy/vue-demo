@@ -35,7 +35,6 @@ export default {
 	},
 
 	getStompCurrentPrice(onmessage_callback) {
-
 		this.client && this.client.disconnect();
 		this.onopen = false;
 
@@ -59,11 +58,12 @@ export default {
 
 		const connect_callback = message => {
 			console.log('Stomp连接成功！');
-			const symbols = this.getOptionSymbols(true);
-			for ( let i = 0; i < symbols.length; i++ ) {
-				Client.subscribe('quote.' + 'real_default.' + symbols[i] +'?format=v2&throttle=1', onmessage)
-			}
-			
+			// const symbols = this.getOptionSymbols(true);
+			this.getOptionSymbolsAsStomp( (symbols) => {
+				for ( let i = 0; i < symbols.length; i++ ) {
+					Client.subscribe('quote.' + 'real_default.' + symbols[i] +'?format=v2&throttle=1', onmessage)
+				}
+			});
 		}
 
 		const error_callback = err => {
@@ -110,6 +110,18 @@ export default {
   			return Object.keys(optionLists);
   		} 
   		return optionLists;
+  	},
+
+  	getOptionSymbolsAsStomp( callback ) {
+  		let self = this;
+  		let optionLists = this._getSelfSymbols();
+  		if ( !optionLists ) {
+			setTimeout( () => {
+				this.getOptionSymbolsAsStomp(callback);
+			}, 500 );
+			return;
+  		}
+  		callback(Object.keys(optionLists))
   	},
 
   	_add(symbols, callback) {

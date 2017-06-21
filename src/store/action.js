@@ -11,7 +11,7 @@ export default {
 	// 获取交易页面的symbol
 	getOptionList( {commit, state}, options ) {
 		// axios.get('http://newapi.invhero.com/v3/demo/symbols6/?access_token=d4ea901c-66d4-404f-ae2b-ed5220bbdd32&_f=0.7636744918061493')
-		symbol.getOptionSymbolList(options).then(function( optionList ) {
+		symbol.getOptionSymbolList(options).then(( optionList ) => {
 			commit('OPTIONLISTDATA', optionList.data.data);	
 		})	
 	},

@@ -303,44 +303,20 @@
 			},
 
 			async refreshAccount() {
-				let type = this.$getType();
 				let account = this.$store.state.userAccount.account;
 				let orderList = await this._getAccountFromCache();
+				let isHasList = Object.keys(orderList.list).length;
 				let profitRet = await this.getFloatingProfit(account, orderList.list, orderList.symbols);
 				// 浮动盈亏
 				let prices = profitRet.prices,
 					profit = profitRet.mainProfit,
 					floatOption = profitRet.floatList;
+
 				this.cacheProfits(floatOption);
-				// 账户净值
-				let netDeposit = parseFloat(account[type].balance) + parseFloat(profit);
-				// 可用保证金
-				let freeMargin = netDeposit - parseFloat(orderList.margin);
 
-				let margin = parseFloat(account[type].margin);
-       			let bait = parseFloat(account[type].bait ? account[type].bait : 0);
-       			// 保证金增金
-        		let bonus = parseFloat(account[type].bonus ? account[type].bonus : 0);
+				this._refreshAccount(account, orderList, prices, profit, floatOption);
 
-        		// 保证金比例
-        		let rate;
-		        if (orderList.margin == 0) {
-		          rate = '--';
-		        }
-		        else if (bonus < margin) {
-		          rate = ((freeMargin + margin) / margin * 100).toFixed(2);
-		        }
-		        else if (bonus >= margin) {
-		          rate = ((freeMargin + margin * 2 - bonus)/margin * 100).toFixed(2);
-		        }
-
-		        this.netDeposit = parseFloat(netDeposit).toFixed(2);
-		        this.freeMargin = parseFloat(freeMargin).toFixed(2);
-		        this.margin = parseFloat(margin).toFixed(2);
-		        this.bait = parseFloat(bait).toFixed(2);
-		        this.bonus = parseFloat(bonus).toFixed(2);
-		        this.rate = parseFloat(rate).toFixed(2);
-		        this.profit = parseFloat(profit).toFixed(2);
+				if ( !isHasList ) return;
 		        // 待优化
 		        this.refreshComteoller = setTimeout(() => {
 		        	this.refreshAccount()
@@ -369,7 +345,6 @@
 			async _getAccountFromCache() {
 				let orderList = await this.$PB.getCurrentOrderList();
 				orderList = orderList.data.data;
-
 				let margin = 0,
 					profit = 0,
 					symbols = [];
@@ -390,6 +365,45 @@
 			        margin: margin,
 			        profit: profit,
 				};
+			},
+
+			_refreshAccount(account, orderList, prices, profit, floatOption) {
+				let type = this.$getType();
+				try {
+					// 账户净值
+					let netDeposit = parseFloat(account[type].balance) + parseFloat(profit);
+					
+					// 可用保证金
+					let freeMargin = netDeposit - parseFloat(orderList.margin);
+
+					let margin = parseFloat(account[type].margin);
+	       			let bait = parseFloat(account[type].bait ? account[type].bait : 0);
+	       			// 保证金增金
+	        		let bonus = parseFloat(account[type].bonus ? account[type].bonus : 0);
+
+	        		// 保证金比例
+	        		let rate;
+			        if (orderList.margin == 0) {
+			          rate = '--';
+			        }
+			        else if (bonus < margin) {
+			          rate = ((freeMargin + margin) / margin * 100).toFixed(2);
+			        }
+			        else if (bonus >= margin) {
+			          rate = ((freeMargin + margin * 2 - bonus)/margin * 100).toFixed(2);
+			        }
+
+			        this.netDeposit = parseFloat(netDeposit).toFixed(2);
+			        this.freeMargin = parseFloat(freeMargin).toFixed(2);
+			        this.margin = parseFloat(margin).toFixed(2);
+			        this.bait = parseFloat(bait).toFixed(2);
+			        this.bonus = parseFloat(bonus).toFixed(2);
+			        this.rate = isNaN(rate) ? 0 : parseFloat(rate).toFixed(2);
+			        this.profit = parseFloat(profit).toFixed(2);
+
+		        } catch(e) {
+					console.log(account)
+				}
 			},
 
 			clearrefreshAccount(page) {

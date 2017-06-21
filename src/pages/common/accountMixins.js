@@ -389,6 +389,7 @@ export default {
 
 			// 这里阻塞
 			let curPrice = await this._getStorePrices(symbols);
+
 			//stomp 推下来
 			if ( curPrice && curPrice.length ) {
 				return curPrice;
@@ -445,7 +446,8 @@ export default {
 			        newSymbols.push(symbol);
 			    }
 			});
-			if (prices.length === symbols.length && prices.length > 0 && (Symbol._allIn(symbols) ||all)) {  
+
+			if (prices.length === symbols.length && prices.length > 0 && (Symbol._allIn(symbols) ||all)) { 
 			    return prices;
 			} else {
 			    if (newSymbols.length > 0) {

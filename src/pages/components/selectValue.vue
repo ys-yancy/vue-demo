@@ -421,7 +421,7 @@
 				const type = this.cookie.get('type');
 				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
 				this.freeMargin = this.netDeposit - parseFloat(this.margin);
-				let volume = await this.calVolume(curSymbol, userAccount, this.freeMargin.toFixed(2));		
+				let volume = await this.calVolume(curSymbol, userAccount, this.freeMargin.toFixed(2));
 				this.changeVolume(volume);
 			},
 

@@ -314,7 +314,7 @@
 					});
 				}
 
-				if ( this.symbol_list.length ) {
+				if ( this.symbol_list.length && !!symbolStompList ) {
 					for ( let i = 0; i < this.symbol_list.length; i++ ) {
 						if ( this.symbol_list[i].symbol === symbolStompList[0] ) {
 
@@ -337,8 +337,9 @@
 							this.$set( this.symbol_list, i, newSymbolParam );
 						}
 					}
-					return this.symbol_list;
 				}
+
+				return this.symbol_list;
 			},
 			...mapState({
 				list: state=> state.symbolList,
@@ -349,7 +350,11 @@
 
 		watch: {
 			list( list ) {
-				// console.log(list)
+				let stompIsConnect = !this.$store.state.symbolCurrentPrice;
+				if ( !!list && stompIsConnect ) {
+					// 在这理触发stomp
+					// this.$store.dispatch('getStompCurrentPrice');
+				}
 			},
 
 			symbol_list(list) {

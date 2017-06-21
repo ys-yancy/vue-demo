@@ -124,6 +124,7 @@
 		    justify-content: center;
 		    /*.margin-bottom(190);*/
 		    background: #1ABC9C;
+		    display: none;
 	    }
 	}
 

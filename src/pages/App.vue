@@ -72,62 +72,54 @@
 	#app>div{
 			width: 100%; 
 			position: absolute;
-	}
-	.slide-enter-active {
- 		transition: all .3s cubic-bezier(0,0,0.25,1);
- 		transform: translateX(0);
+	}*/
+	/*.slide-enter-active {
+ 		transition: all 1s cubic-bezier(0,0,0.25,1);
+ 		opacity: 1;
 	}
  
 	.slide-leave-active {
- 		transition: all .3s cubic-bezier(0,0,0.25,1);
- 		transform: translateX(-100%);
+ 		transition: all 1s cubic-bezier(0,0,0.25,1);
+ 		opacity: 1;
 	}
  
 	.slide-enter {
- 		transform: translateX(100%);
+ 		opacity: 0;
 	}
  
 	.slide-leave {
- 		transform: translateX(100%);
+ 		opacity: 0;
 	}*/
 	
 </style>
 
 <script type="text/javascript">
-	import Footer from '../pages/components/footer';
-	import Header from '../pages/components/header';
-	import { mapState, mapActions } from 'vuex';
-
 	export default {
 		name: 'app',
-		data() {
-			return {
-				msg: 'ys',
-				Stomp: '',
-				body: '',
-				symbolPrice: '',
-			}
-		},
 		methods: {
-			zeptoAjax() {
-				$.ajax({
-					url: 'http://newapi.invhero.com/v1/user/hongbao?access_token=d4ea901c-66d4-404f-ae2b-ed5220bbdd32&_f=0.4152040680259623',
-					success: function(data) {
-						// console.log(data)
+			connect_stomp() {
+				this.$store.dispatch('getStompCurrentPrice');
+				setTimeout( () => {
+					let isConnect = this.$store.state.symbolCurrentPrice;
+					if ( !isConnect ) {
+						this.connect_stomp();
 					}
-				})
+				}, 2000)
 			}
 		},
 		mounted() {
 			console.log('App挂在完毕！');
 		},
 		created() {
-			this.$store.dispatch('getStompCurrentPrice');
-			this.$store.dispatch('getAccount');
+			this.$store.dispatch('getAccount');		
 		},
-		components: {
-			myFooter: Footer,
-			myHeader: Header
+		watch: {
+			$route(to, from) {
+				let _f = to.name,
+					isConnect = this.$store.state.symbolCurrentPrice;
+
+				!!_f&&!isConnect&&this.connect_stomp();
+			}
 		}
 	}
 </script>
