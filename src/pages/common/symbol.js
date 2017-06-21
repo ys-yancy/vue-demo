@@ -6,13 +6,14 @@ import F from '../lib/frame';
 export default {
 	async getOptionSymbolList( options ) {
 
-
-		//saveSymbols(symbolData) 应该存为数组
-		// let cacheSymbolList = this.getSelfSymbols();
-
-		// if ( cacheSymbolList ) {
-		// 	return cacheSymbolList;
-		// }
+		let cacheSymbolList = this.getOptionSymbols();
+		if ( cacheSymbolList ) {
+			let _cacheSymbolList = [];
+			Object.keys(cacheSymbolList).forEach( (key, index) => {
+				_cacheSymbolList.push(cacheSymbolList[key])
+			} )
+			return _cacheSymbolList;
+		}
 
 		options.url = 'v3/' + cookie.get('type') + '/symbols6/';
 
@@ -28,10 +29,11 @@ export default {
 		}
 
 		let symbolData = await io.ajax(params);
+		let symbolList = symbolData.data.data;
 
 		//将获取到的symbol存起来
 		this.saveSymbols(symbolData);
-		return symbolData;
+		return symbolList;
 	},
 
 	getStompCurrentPrice(onmessage_callback) {

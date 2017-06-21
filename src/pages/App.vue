@@ -117,7 +117,7 @@
 			$route(to, from) {
 				let _f = to.name,
 					isConnect = this.$store.state.symbolCurrentPrice;
-
+				// 这有问题
 				!!_f&&!isConnect&&this.connect_stomp();
 			}
 		}

@@ -140,6 +140,22 @@ export default {
 		return currentOrderList;
 	},
 
+	// 获取价格
+	async getSymbolsPrices(symbol_price) {
+		let params = {
+			url: 'http://price.invhero.com/v2/price/current',
+			type: 'GET',
+			data: {
+				symbol: symbol_price,
+			},
+			unjoin: true,
+		};
+
+		let data = await __.ajax(params);
+
+		return data.data.data;
+	},
+
 	// 个人设置
 
 	async getWatchdataLimt(options) {

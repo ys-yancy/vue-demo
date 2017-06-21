@@ -260,7 +260,7 @@ export default {
 	      	if (orderLen === 0) {
 		      	return 0;
 		    }
-		    let prices = await this.getCurrentPrice(symbols, 'profit');
+		    let prices = await this.getCurrentPrice(symbols);
 		    let optionList =Symbol.getOptionSymbols();
 
 		    try {
@@ -369,11 +369,14 @@ export default {
 
 		/**
 		 * 获取当前品种的价格 当前价格是优化的关键
+		 * @params sourceObj 返回那种数据
 		 */	
-		async getCurrentPrice(symbol, returnObj) {
-			let type = this.isDemo() ? 'demo' : 'real';
-			let ret = await this._getPrice(symbol, returnObj);
-			let key = `${type}:${symbol}:curPrice`;
+		async getCurrentPrice(symbol, sourceObj) {
+			let type = this.isDemo() ? 'demo' : 'real',
+				key = `${type}:${symbol}:curPrice`;
+
+			let ret = await this._getPrice(symbol, sourceObj);
+			
 			storage.set(key, ret);
     		return ret;
 		},
@@ -381,12 +384,7 @@ export default {
 		/**
 		 * 
 		 */
-		async _getPrice(symbols, returnObj) {
-			let type = cookie.get('type');
-			if ( typeof symbols !== 'string' && returnObj !== 'profit' ) {
-				symbols = symbols[0];
-			}
-
+		async _getPrice(symbols, sourceObj) {
 			// 这里阻塞
 			let curPrice = await this._getStorePrices(symbols);
 
@@ -394,37 +392,30 @@ export default {
 			if ( curPrice && curPrice.length ) {
 				return curPrice;
 			}
-
+			// 从接口拿
 			let symbol_price = Symbol.getQuoteKeys();
-			let params = {
-				url: 'http://price.invhero.com/v2/price/current',
-				type: 'GET',
-				data: {
-					symbol: symbol_price,
-				},
-				unjoin: true,
-			}
-			let data = await __.ajax(params);
-			data = data.data.data;
-			if (returnObj == 'profit') {
-				return data;
-			}
-			for ( let i = 0; i < data.length; i++ ) {
-				let params = {
-					symbol: data[i].symbol,
-	      			askPrice: data[i].ask_price[0],
-	      			bidPrice: data[i].bid_price[0],
-	      			lastPrice: data[i].last_price,
-	      			bid_price: [data[i].bid_price[0]],
-	      			ask_price: [data[i].ask_price[0]],
-				}
 
+			let prices = await this.$PB.getSymbolsPrices(symbol_price);
+
+			if (!sourceObj) {
+				return prices;
+			}
+
+			for ( let i = 0; i < prices.length; i++ ) {
+				let params = {
+					symbol: prices[i].symbol,
+	      			askPrice: prices[i].ask_price[0],
+	      			bidPrice: prices[i].bid_price[0],
+	      			lastPrice: prices[i].last_price,
+	      			bid_price: [prices[i].bid_price[0]],
+	      			ask_price: [prices[i].ask_price[0]],
+				}
 				// Symbol.updatePrice(params);
-				if ( data[i].symbol == symbols ) {	
-					return returnObj = params;
+				if ( prices[i].symbol == symbols ) {	
+					return sourceObj = params;
 				}
 			}
-			return returnObj;
+			return sourceObj;
 		},
 
 		async _getStorePrices(symbols) {
