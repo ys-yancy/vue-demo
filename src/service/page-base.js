@@ -12,7 +12,7 @@ export default {
 	*/
 
 	// 获取账户信息
-	async getAccount() {
+	async getAccount(isClearStore) {
 		const params = {
 			url: 'v4/user/',
 			type: 'GET',
@@ -22,23 +22,21 @@ export default {
 			},
 		}
 
-		let account = '';
-
 		let key = `${Cookie.get('token')}:account`;
 
 		let store_account = await this.getStore(key);
 
-		if ( store_account != null && store_account != '' ) {
-			account = store_account;
-		} else {
-			account = await __.ajax(params);
-			Storage.set(key, account);
+		if ( !!store_account && !isClearStore ) {
+			return store_account;
 		}
+
+		let account = await __.ajax(params);
+		Storage.set(key, account.data.data);
 
 		Cookie.set('demo_group', account.data.data.account.demo.group_name);
 		Cookie.set('real_group', account.data.data.account.real.group_name);
 
-		return account;
+		return account.data.data;
 	},
 
 	//获取k线图数据

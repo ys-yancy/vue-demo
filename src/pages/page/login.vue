@@ -101,7 +101,7 @@
 
 						this.cookie.set('type', 'demo');
 
-						this.$store.dispatch('getAccount');
+						this.$store.dispatch('getAccount', true);
 
 						this.$store.dispatch('getOptionList', {
 							access_token: data.data.data.token,

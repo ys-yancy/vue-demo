@@ -7,12 +7,18 @@ export default {
 	async getOptionSymbolList( options ) {
 
 		let cacheSymbolList = this.getOptionSymbols();
-		if ( cacheSymbolList ) {
+		let expires = cacheSymbolList.expires,
+			no_time = Date.now();
+
+		if ( cacheSymbolList && no_time < expires ) {
 			let _cacheSymbolList = [];
 			Object.keys(cacheSymbolList).forEach( (key, index) => {
-				_cacheSymbolList.push(cacheSymbolList[key])
+				key && key !== 'expires' && _cacheSymbolList.push(cacheSymbolList[key])
 			} )
 			return _cacheSymbolList;
+		} else {
+			let key = this._getOptionSymbolListStoragekey();
+			storage.removeValue(key);
 		}
 
 		options.url = 'v3/' + cookie.get('type') + '/symbols6/';
@@ -163,13 +169,17 @@ export default {
     	if (mySymbols) {
     		mySymbols = JSON.parse(mySymbols);
     	} else {
-    		mySymbols = {}
+    		mySymbols = {};
+    		Object.defineProperty(mySymbols, 'expires', {
+    			enumerable: true,
+    			value: Date.now() + 1000 * 60 * 60 * 1,  // 单位 s option 列表过期时间
+    		})
     	}
     	Object.keys(cache).forEach((key, index) => {
     		if (!mySymbols[key]) {
     			mySymbols[key] = cache[key]
     		}
-    	})
+    	});
     	storage.set(key, mySymbols);
 	},
 

@@ -18,6 +18,7 @@ export default {
 
 	    ...mapMutations({
 	    	addStompProces: 'CHAHESTOMPPRICES',
+	    	updateStompPrices: 'CHAHESTOMPPRICES',
 	    }),
 		/**
 		 * 判断当前品种状态
@@ -260,11 +261,13 @@ export default {
 	      	if (orderLen === 0) {
 		      	return 0;
 		    }
+
 		    let prices = await this.getCurrentPrice(symbols);
 		    let optionList =Symbol.getOptionSymbols();
 
 		    try {
 	        	let deferreds = await getProfitList.call(this, optionList, prices, orderList);
+
 	    	} catch (e) {}
 
 	    	return ({mainProfit: mainProfit, floatList: floatList || [], prices: prices || []});
@@ -279,6 +282,7 @@ export default {
 		    }
 
 		    async function getProfit(item, prices, optionList) {
+
 		        let symbol = item.symbol,
 		        	current_price = getPrice(prices, symbol),
 		        	policy = getSym(optionList, symbol).policy;
@@ -360,7 +364,7 @@ export default {
 
 		    function getSym(optionList, symbol) {
 		      	for (let i in optionList ) {
-		        	if (optionList[i].policy.symbol == symbol) {
+		        	if ( i !== 'expires' && optionList[i].policy.symbol == symbol) {
 		          		return optionList[i];
 		        	}
 		      	}
@@ -410,7 +414,7 @@ export default {
 	      			bid_price: [prices[i].bid_price[0]],
 	      			ask_price: [prices[i].ask_price[0]],
 				}
-				// Symbol.updatePrice(params);
+				this.updateStompPrices(params);
 				if ( prices[i].symbol == symbols ) {	
 					return sourceObj = params;
 				}

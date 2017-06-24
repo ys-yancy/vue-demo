@@ -332,6 +332,7 @@
 								close_price: this.symbol_list[i].close_price,
 								isUp: is_up,
 								isBgUp: is_bgUp,
+								close: this.symbol_list[i].close,
 							}
 
 							this.$set( this.symbol_list, i, newSymbolParam );

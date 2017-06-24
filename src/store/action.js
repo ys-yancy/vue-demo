@@ -2,9 +2,9 @@ import _ from '../service/page-base';
 import symbol from '../pages/common/symbol';
 export default {
 	// 获取账户信息
-	getAccount( {commit, state} ) {
-		_.getAccount().then(function( account ) {
-			commit('USERACCOUNT', account.data.data)
+	getAccount( {commit, state}, isClearStore ) {
+		_.getAccount(isClearStore).then(function( account ) {
+			commit('USERACCOUNT', account)
 		})
 	},
 
