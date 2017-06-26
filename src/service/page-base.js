@@ -98,13 +98,13 @@ export default {
 	},
 
 	// 获取当前订单列表
-	async getCurrentOrderList(options) {
+	async getCurrentOrderList(options, isSetUp) {
 		let type = Cookie.get('type'),
 			token = Cookie.get('token'),
 			key = `${type}:${token}:curorder`
 
 		let cacheCurOrderList = Storage.get(key);
-		if ( cacheCurOrderList ) {
+		if ( cacheCurOrderList && !isSetUp ) {
 			return JSON.parse(cacheCurOrderList);
 		}
 		const params = {

@@ -102,6 +102,7 @@
 		},
 
 		computed: {
+
 			infoData() {
 				const price = this.price.todayPrice,
 					yesterdayPrice = this.price.yesterdayPrice;

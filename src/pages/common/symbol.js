@@ -7,7 +7,7 @@ export default {
 	async getOptionSymbolList( options ) {
 
 		let cacheSymbolList = this.getOptionSymbols();
-		let expires = cacheSymbolList.expires,
+		let expires = cacheSymbolList&&cacheSymbolList.expires,
 			no_time = Date.now();
 
 		if ( cacheSymbolList && no_time < expires ) {
@@ -117,6 +117,7 @@ export default {
   		if (isKey) {
   			return Object.keys(optionLists);
   		} 
+
   		return optionLists;
   	},
 

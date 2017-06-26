@@ -268,6 +268,7 @@
 					subscribe_symbol = subscribe_price&&subscribe_price[0] ? subscribe_price[0] : false;
 
 				if  ( subscribe_symbol, cur_symbol === subscribe_symbol ) {
+					console.log(subscribe_price)
 					return subscribe_price;
 				}
 				return;	

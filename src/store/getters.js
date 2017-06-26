@@ -4,5 +4,12 @@ export default {
 		if (cachePrices) {
 			return cachePrices;
 		}
-	}
+	},
+
+	getCachePrice(state) {
+		let cachePrices = state.cacheStompPrices;
+		if (cachePrices) {
+			return cachePrices;
+		}
+	},
 }

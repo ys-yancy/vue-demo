@@ -84,6 +84,7 @@ export default {
 	},
 	[CHAHESTOMPPRICES]( state, prices ) {
 		let symbol = prices.symbol;
+		state.cacheStompPrices.triggerVier = state.cacheStompPrices.triggerVier ? 0 : 1;
 		state.cacheStompPrices[symbol] = prices;
 	}
 

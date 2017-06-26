@@ -25,7 +25,9 @@ const state = {
 	curOrderMargin: 0, //占用保证金
 	defaultVolume: null, // 默认交易量
 	cacheCurOrderProfit: false,
-	cacheStompPrices: {},
+	cacheStompPrices: {
+		triggerVier: 0, // 因为vue数据是响应式的， 所以加一个触发变量
+	},
 }
 
 export default new Vuex.Store({

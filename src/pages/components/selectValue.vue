@@ -57,12 +57,12 @@
 
 		<div>
 			<div v-if='isClose != null && !isClose' class="base submit">
-				<div class="sell" :class='{ guandan: isGuadan }'>
-					<p class="bid-price">{{ sell }}</p>
+				<div class="sell" :class='{ guandan: isGuadan }' @click='action(false)'>
+					<p class="bid-price">{{ sell_price }}</p>
 					{{ isGuadan ? '挂单买跌' : '买跌' }}
 				</div>
-				<div class="buy" :class='{ guandan: isGuadan }'>
-					<p class="ask-price">{{ buy }}</p>
+				<div class="buy" :class='{ guandan: isGuadan }' @click='action(true)'>
+					<p class="ask-price">{{ buy_price }}</p>
 					{{ isGuadan ? '挂单买涨' : '买涨' }}
 				</div>
 			</div>
@@ -342,7 +342,7 @@
 </style>
 
 <script type="text/javascript">
-	import { mapMutations } from 'vuex';
+	import { mapMutations, mapGetters } from 'vuex';
 	import mixins from '../common/accountMixins'
 	export default {
 		name: '',
@@ -458,35 +458,103 @@
 			switchMore() {
 				this.more = this.more ? false : true;
 				return this.more; 
+			},
+
+			action(isBuy) {
+				let up = !!isBuy;
+				let params = this.getParams(up);
+				this._addOrder(params, up)
+			},
+
+			getParams(up, cmd) {
+				let	openPrice = up ? this.buy_price : this.sell_price,
+					type;
+
+				//挂单使用输入的价格
+				if (this.isGuadan) {
+					openPrice = 0;
+				}
+
+				let params = {
+					openprice: openPrice, 
+      				volume: this.value,
+      				takeprofit: parseFloat(this.takeProfit),
+      				stoploss: parseFloat(this.stopLoss),
+				}
+
+				if (cmd) {
+					params.type = cmd;
+					return params;
+				}
+
+				//非挂单
+				if (!this.isGuadan) {
+					type = up ? 'BUY' : 'SELL';
+				} else {
+					let op = parseFloat(params.openprice);
+				    let p = parseFloat(this.sell_price);
+				    if (up) {
+				        type = op < p ? 'BUY LIMIT' : 'BUY STOP';
+				    } else {
+				        type = op > p ? 'SELL LIMIT' : 'SELL STOP';
+				    }
+				}
+
+				params.type = type;
+				return params;
+			},
+
+			_addOrder(params, up) {
+				let accountType = this.$getType();
+				let slippage = parseFloat(this.cur_symbol.policy.default_slippage) * parseFloat(this.cur_symbol.policy.pip);
+				let data = {
+			        access_token: this.cookie.get('token'),
+			        symbol: this.cur_symbol.policy.symbol,
+			        ui: 4,
+			        slippage: slippage
+			    };
+
+			    data = Object.assign(params, data);
+			    if ( accountType == 'demo' ) {
+			    	this._submitOrder(data, accountType, up);
+			    } else {
+			    	/* 
+				     * protrading.html点击“买涨”、“买跌”及
+				     * order.html点击“立即平仓”后如果需要输入交易密码，
+				     * 那么输入交易密码后将不再继续进行下单或平仓操作，仅仅回到当前页面。
+				     */
+			    }
+
+			},
+
+			_submitOrder(data, accountType, up) {
+				let	openPrice = up ? this.buy_price : this.sell_price,
+					guadan = !!this.isGuadan;
+
+				// if (this.followFromTicket) {
+			 //      	data.follow_from_ticket = this.followFromTicket;
+			 //    }
+
+				this.ajax({
+					url: '/v1/order/open/' + accountType,
+      				data: data,
+      				type: 'post'
+				}).then( (res) => {
+					console.log(res)
+				})
 			}
 		},
 
 		computed: {
+			...mapGetters([
+				"getCachePrice"
+			]),
+
 			curSymbol() {
-				// console.log(encodeURIComponent('sell stop'))
 				if ( this.selectData ) {
 					return this.selectData;
 				} else {
 					return '';
-				}
-			},
-
-			sell() {
-				// infoBar组件当前价格更新有问题  
-				if ( this.curPrice ) {
-					this.sell_price = this.curPrice[3];
-					return this.sell_price
-				} else {
-					return this.sell_price ? this.sell_price : '-- --';
-				}
-			},
-
-			buy() {
-				if ( this.curPrice ) {
-					this.buy_price = this.curPrice[1];
-					return this.buy_price
-				} else {
-					return this.buy_price ? this.buy_price : '-- --';
 				}
 			},
 
@@ -529,6 +597,7 @@
 
 		created() {
 			// console.log(this.selectData)
+			// console.log(this.$store.state.cacheStompPrices)
 		},
 
 		watch: {
@@ -544,6 +613,15 @@
 					this.checkSymbolStatus(symbol, userAccount.account);
 					this.getDefaultVolume(userAccount.account, symbol);
 				}
+			},
+
+			getCachePrice: {
+				deep: true,
+				handler: function(curVal, oldVal) {
+　　　　　　　　　	let symbol = this.$route.query.symbol;
+					this.sell_price = curVal[symbol].bidPrice;
+					this.buy_price = curVal[symbol].askPrice;
+　　　　　　　　},
 			}
 		}
 	}
