@@ -65,6 +65,7 @@
 </style>
 
 <script type="text/javascript">
+	import { mapGetters } from 'vuex';
 	import Util from '../common/util';
 	import HighStock from '../common/initCharts';
 	import mySeclect from '../components/selectValue';
@@ -262,14 +263,15 @@
 		},
 
 		computed: {
-			curPrice() {
-				let subscribe_price = this.$store.state.symbolCurrentPrice,
-					cur_symbol = this.params.symbols,
-					subscribe_symbol = subscribe_price&&subscribe_price[0] ? subscribe_price[0] : false;
+			...mapGetters([
+				"getCachePrice"
+			]),
 
-				if  ( subscribe_symbol, cur_symbol === subscribe_symbol ) {
-					console.log(subscribe_price)
-					return subscribe_price;
+			curPrice() {
+				let cachePrices = this.$store.state.cacheStompPrices,
+					cur_symbol = this.params.symbols;
+				if (cachePrices && cachePrices[cur_symbol]) {
+					return cachePrices[cur_symbol]
 				}
 				return;	
 			},
@@ -295,32 +297,36 @@
 		},
 
 		watch: {
-			curPrice(price) {
-				if (price) {
-
+			getCachePrice: {
+				handler: function(prices) {
 					let cur_symbol = this.params.symbols,
-						subscribe_symbol = price[0];
-			
-					const bidPrice = parseFloat(price[3]);
+						price = prices[cur_symbol];
 
-					if (this.chartLastData) {
+					if (price) {
 
-						const curData1 = Util.getTime(price[7]),
-						curData2 = this.chartLastData[2]&&this.chartLastData[2] < bidPrice ? bidPrice : this.chartLastData[2],
-						curData3 = this.chartLastData[3]&&this.chartLastData[3] < bidPrice ? bidPrice : this.chartLastData[3],
-						curData4 = bidPrice;
+						let cur_symbol = this.params.symbols,
+							subscribe_symbol = price.askPrice;
+						const bidPrice = parseFloat(price.bidPrice);
+						if (this.chartLastData) {
 
-						this.chartLastData.splice(0, 1, curData1);
-						this.chartLastData.splice(2, 1, curData2);
-						this.chartLastData.splice(3, 1, curData3);
-						this.chartLastData.splice(4, 1, curData4);
+							const curData1 = Date.now(),//Util.getTime(price[7]),
+							curData2 = this.chartLastData[2]&&this.chartLastData[2] < bidPrice ? bidPrice : this.chartLastData[2],
+							curData3 = this.chartLastData[3]&&this.chartLastData[3] < bidPrice ? bidPrice : this.chartLastData[3],
+							curData4 = bidPrice;
 
-						// updata the chart lastData
-						// HighStock.addChartPoint(this.chartLastData);
-					}	
-				} else {
-					// console.log('else: ' + price)
-				}
+							this.chartLastData.splice(0, 1, curData1);
+							this.chartLastData.splice(2, 1, curData2);
+							this.chartLastData.splice(3, 1, curData3);
+							this.chartLastData.splice(4, 1, curData4);
+
+							// updata the chart lastData
+							// HighStock.addChartPoint(this.chartLastData);
+						}	
+					} else {
+						// console.log('else: ' + price)
+					}
+				},
+				deep: true,
 			},
 
 			curSymbol_userAccount(param) {
