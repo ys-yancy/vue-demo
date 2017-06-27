@@ -2,7 +2,11 @@
 	<div class="select-val">
 		<div class="select-add">
 			<ul class="leverage-wapper">
-				<li class="lever">杠杆:<span class="lever-text">{{this.selectData.leverage ? this.selectData.leverage : '- -'}}</span>倍</li>
+				<li class="lever">杠杆:
+					<span class="lever-text">
+						{{curSymbol&&curSymbol.leverage ? curSymbol.leverage : '- -'}}
+					</span>倍
+				</li>
 				<li class="desc">1手=
 				<span class="desc-text">
 					{{curSymbol ? curSymbol.policy.lot_size : '- -'}}
@@ -374,7 +378,7 @@
 			}
 		},
 
-		props: ['selectData', 'curPrice', 'pip'],
+		props: ['selectData', 'pip'],
 
 		methods: {
 			...mapMutations({
@@ -404,20 +408,7 @@
 				this.isGuadan = this.isGuadan ? false : true;
 			},
 
-			async getCurrentOrderList() {
-				let ret = await this.$PB.getCurrentOrderList({}).then((data)=> {
-					data = data.data.data;
-					for ( let i = 0; i < data.length; i++ ) {
-						this.margin += data[i].margin;
-						this.profit += data[i].profit;
-					}
-					return data
-				});
-				return ret;
-			},
-
 			async getDefaultVolume(userAccount, curSymbol) {
-				let data = this.getCurrentOrderList();
 				const type = this.cookie.get('type');
 				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
 				this.freeMargin = this.netDeposit - parseFloat(this.margin);
@@ -426,7 +417,8 @@
 			},
 
 			async changeDefaultVolume(userAccount, curSymbol, volume) {
-				if (volume && volume.volume) {
+
+				if (!!volume) {
 					this.value = parseFloat(volume.volume);
 					this.maxValume = parseFloat(volume.maxVolume);
 
@@ -464,6 +456,24 @@
 				let up = !!isBuy;
 				let params = this.getParams(up);
 				this._addOrder(params, up)
+			},
+
+			/**
+		    * 获取交易品种的交易杠杆 (实际上这段代码就是calMarginWithOpenPrice方法中的一部分)
+		    * symbol: 从2.2.2.4 接口获取的symbol对象
+		    * account: 从2.2.2.5 接口获取的account对象
+		    **/
+			getLeverage(symbol, account) {
+				const type = this.$getType();
+				let isDemo = type === 'demo' ? true : false;
+    			let max_leverage = isDemo ? symbol.policy.demo_max_leverage : symbol.policy.real_max_leverage;
+    			let trading_leverage = account[type].leverage * symbol.policy.leverage_multiplier;
+   				max_leverage = parseFloat(max_leverage);
+    			trading_leverage = parseFloat(trading_leverage);
+
+				trading_leverage = trading_leverage < max_leverage ? trading_leverage : max_leverage;
+
+    			return trading_leverage;
 			},
 
 			getParams(up, cmd) {
@@ -551,11 +561,17 @@
 			]),
 
 			curSymbol() {
-				if ( this.selectData ) {
-					return this.selectData;
-				} else {
-					return '';
-				}
+				const userAccount = this.$store.state.userAccount.account;
+				const curSymbol = this.$store.state.curSymbolInfoData[0];
+				if ( userAccount && curSymbol ) {
+					curSymbol.leverage = this.getLeverage(curSymbol, userAccount);
+					//判断品种状态
+					this.checkSymbolStatus(curSymbol, userAccount);
+					// 计算默认交易量
+					this.getDefaultVolume(userAccount, curSymbol);
+
+					return curSymbol;
+				}				
 			},
 
 			take_profit() {
@@ -601,18 +617,10 @@
 		},
 
 		watch: {
-			async defaultVolume(volume) {
+			defaultVolume(volume) {
 				const userAccount = this.$store.state.userAccount;
 				const curSymbol = this.$store.state.curSymbolInfoData[0];
 				this.changeDefaultVolume(userAccount, curSymbol, volume);
-			},
-
-			curSymbol(symbol) {
-				let userAccount = this.$store.state.userAccount;
-				if (symbol && userAccount.account) {
-					this.checkSymbolStatus(symbol, userAccount.account);
-					this.getDefaultVolume(userAccount.account, symbol);
-				}
 			},
 
 			getCachePrice: {

@@ -2,18 +2,18 @@
 	<div class="infoBar">
 		<section class="info" :class='{up: up}'>
 			<div class="cur-wrapper">
-				<p id="J_Price">{{curPrice&&curPrice[3] ? curPrice[3] : infoData.price}}</p>
-				<span class="range" id="J_range">{{diffPriceRatio.diffPrice}}</span>
-				<span class="range-percent" id="J_percent">{{diffPriceRatio.Ratio}}%</span>
+				<p id="J_Price">{{info_data.price}}</p>
+				<span class="range" id="J_range">{{diff}}</span>
+				<span class="range-percent" id="J_percent">{{ratio}}%</span>
 			</div>
 			<div class="detail-wrapper">
 				<div>
-					<span class="price-today">今开:{{infoData.open}}</span>
-					<span class="highest">最高:{{infoData.high}}</span>
+					<span class="price-today">今开:{{info_data.open}}</span>
+					<span class="highest">最高:{{info_data.high}}</span>
 				</div>
 				<div>
-					<span class="prec">作收:{{infoData.yesterdayClose}}</span>
-					<span class="lowest">最低:{{infoData.low}}</span>
+					<span class="prec">作收:{{info_data.yesterdayClose}}</span>
+					<span class="lowest">最低:{{info_data.low}}</span>
 				</div>
 			</div>
 		</section>
@@ -74,11 +74,18 @@
 </style>
 
 <script type="text/javascript">
+	import { mapGetters } from 'vuex';
 	export default {
 		name: 'infoBar',
 		data() {
 			return {
 				//好像有点多余
+				diff: 0.00,
+				ratio: 0.00,
+				up: 0,
+				cachePrices: null,
+				isGetInData: false,
+				updateInfoBalContro: null,
 				info_data: {
 					price: '',
 					high: '',
@@ -86,59 +93,136 @@
 					open: '',
 					yesterdayClose: '',
 				},
-
-				diffPrice: {
-					Ratio: '- -',
-					diffPrice: '- - ',
-				}
+				todayPrice: {
+					unit: 0,
+					close: 0, 
+					price: '--',
+				},
+				yesterdayPrice: {
+					close: 0, 
+					price: 0,
+				},
 				
 			}
 		},
 
-		props: ['up', 'price', 'curPrice'],
-
 		created() {
 			// console.log(this.curPrice)
+			// this.emitGetInfoEvent();
 		},
 
-		computed: {
 
-			infoData() {
-				const price = this.price.todayPrice,
-					yesterdayPrice = this.price.yesterdayPrice;
+		methods: {
+			init(price, cur_symbol) {
 
+				this.cachePrices = price;
+				this.updatePriceRatio(price);
+
+				if (!this.isGetInData) {
+					this.getInfoData(price);
+					this.isGetInData = true;
+				}
+			},
+
+			async getInfoData(chchePrices) {
+				let cur_symbol = this.getCachePrice;
+				console.log(cur_symbol)
+				if ( !this.updateInfoBalContro ) {
+					clearTimeout(this.updateInfoBalContro)
+				}
+				let prices = await this.getPrices();
+					prices = prices.slice(prices.length - 2);
+
+				this.todayPrice = prices[1],
+  				this.yesterdayPrice = prices[0];
+
+  				//不清楚unit什么意思，暂时给2
+				this.todayPrice.unit = this.unit ? this.unit : 2;
+				this.todayPrice.close = this.yesterdayPrice.close;
+				//  解决首次渲染慢  可以把这里分开， chchePrices阻塞加载
+				this.todayPrice.price = this.cachePrices&&this.cachePrices.bidPrice || chchePrices.bidPrice;
+  				this.up = this.todayPrice.price - this.todayPrice.close > 0 ? true : false;
+
+  				this.updatePriceRatio(this.cachePrices);
+  				
+				this.updateInfoBalContro = setTimeout(()=> {
+					this.getInfoData();
+				}, 10000)
+			},
+
+			updateInfoBar(prices) {
 				try{
-					this.info_data.price = price.price ? price.price : '- -';
-					this.info_data.high = price.high ? price.high : '- -';
-					this.info_data.low = price.low ? price.low : '- -';
-					this.info_data.open = price.open ? price.open : '- -';
-					this.info_data.yesterdayClose = yesterdayPrice.close ? yesterdayPrice.close : '- -';
+					this.info_data.price = prices.bidPrice ? prices.bidPrice : '- -';
+					this.info_data.high = this.todayPrice.high ? this.todayPrice.high : '- -';
+					this.info_data.low = this.todayPrice.low ? this.todayPrice.low : '- -';
+					this.info_data.open = this.todayPrice.open ? this.todayPrice.open : '- -';
+					this.info_data.yesterdayClose = this.yesterdayPrice.close ? this.yesterdayPrice.close : '- -';
 				}catch(e){
 					console.log(e)
 				}
-
-				return this.info_data;
 			},
 
-			diffPriceRatio() {
-				let diff = NaN;
-				if (this.curPrice) {
-					diff = (this.curPrice[3] - parseFloat(this.price.yesterdayPrice.close)).toFixed(3);
-				} else {
-					diff = (this.price.todayPrice.price - parseFloat(this.price.yesterdayPrice.close)).toFixed(3);
+			updatePriceRatio(cacheprices) {
+				let diff, ratio;
+				if (!this.yesterdayPrice.price && !this.todayPrice.price) {
+					return;
 				}
-			
-				const ratio = !isNaN(diff)&&(diff/parseFloat(this.price.yesterdayPrice.close)); 
-				return {
-					diffPrice: !isNaN(diff) ? diff : '- -',
-					Ratio: !isNaN(ratio) ? (ratio * 100).toFixed(2) : '- -',
-				};
+
+				this.updateInfoBar(cacheprices);
+
+				try{
+					diff = (cacheprices.bidPrice - parseFloat(this.yesterdayPrice.close)).toFixed(3);
+					ratio = diff/parseFloat(this.yesterdayPrice.close).toFixed(2); 
+				}catch(e) {
+					diff = (this.todayPrice.price - parseFloat(this.yesterdayPrice.close)).toFixed(3);
+					ratio = diff/parseFloat(this.yesterdayPrice.close).toFixed(2); 
+				}
+				this.diff = parseFloat(diff).toFixed(3),this.ratio = parseFloat(ratio).toFixed(2);
+				return;	
 			},
 
+			async getPrices() {
+				let params = this.getParams();
+					// symbol = params.id;
+				let data = await this.$PB.getInfoData(params);
+				return data.data.data.price;
+			},
+
+			getParams() {
+				let type = this.$getType();
+				let account = this.$store.state.userAccount;
+					account = account.account[type];
+
+				let params = {
+					id: '',
+					tf: 'm30',
+					group_name: account.group_name,
+				};
+				params.id = this.$route.query.symbol;
+				return params;
+			}
+		},
+
+		computed: {
+			...mapGetters([
+				"getCachePrice"
+			]),
+		},
+
+		beforeDestroy() {
+			clearTimeout(this.updateInfoBalContro);
 		},
 
 		watch: {
-			
+			getCachePrice: {
+				handler: function(prices) {
+					let cur_symbol = this.$route.query.symbol,
+						price = prices[cur_symbol];
+
+					this.init(price, cur_symbol);
+				},
+				deep: true,
+			},
 		},
 	}
 </script>

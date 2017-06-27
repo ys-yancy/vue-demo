@@ -1,6 +1,6 @@
 <template>
 	<div class="Stock">
-		<my-infoBar :up='up' :price='price' :curPrice='curPrice'></my-infoBar>
+		<my-infoBar :pip='pip'></my-infoBar>
 
 		<div id="stockWrap">
 			
@@ -18,7 +18,7 @@
 		<!--  账户信息条  -->
 		<my-account v-if='page == "option"' :bg_color='true'></my-account>
 		<!--  下单ui -->
-		<my-seclect v-if='page == "option"' :selectData='selectData' :curPrice='curPrice' :pip='pip'></my-seclect>
+		<my-seclect v-if='page == "option"' :curPrice='curPrice' :pip='pip'></my-seclect>
 		<!-- 平仓及修改订单ui -->
 		<order-seclect v-else-if='page == "order"'></order-seclect>
 		<!--  历史订单ui -->
@@ -130,7 +130,6 @@
 			        return a[0] > b[0] ? 1 : -1;
 			    });
 			    this.chartLastData = this.stockSymbolList[this.stockSymbolList.length-1];
-			    this.getInfoData();
 				return this.stockSymbolList;
 			},
 
@@ -153,76 +152,53 @@
 				this.instance = HighStock.initChart(data);	
 			},
 
-			async getInfoData(params = this.params) {
-				let data = await this.$PB.getInfoData(params);
-				data = data.data.data.price;
 
-				const priceData = data.slice(data.length - 2);
+			// async getCurrentOrderList() {
+			// 	let data = await this.$PB.getCurrentOrderList({})
+			// 	data = data.data.data;
+			// 	for ( let i = 0; i < data.length; i++ ) {
+			// 		this.margin += data[i].margin;
+			// 		this.profit += data[i].profit;
+			// 	}
+			// 	return data
 
-				//后续优化方向
-				this.price.todayPrice = priceData[1],
-  				this.price.yesterdayPrice = priceData[0];
+			// },
 
-  				//不清楚unit什么意思，暂时给2
-  				if (this.price.todayPrice) {
-  					this.price.todayPrice.unit = this.unit ? this.unit : 2;
-  					this.price.todayPrice.close = this.price.yesterdayPrice.close;
-  					this.price.todayPrice.price = this.chartLastData[4]&&this.chartLastData[4];
-  				}
+			// async getDefaultVolume(userAccount, curSymbol) {
+			// 	// let data = await this.getCurrentOrderList();
+			// 	const type = this.cookie.get('type');
 
-  				this.up = this.price.todayPrice.price - this.price.todayPrice.close > 0 ? true : false;
+			// 	this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
+			// 	this.freeMargin = this.netDeposit - parseFloat(this.margin);
 
-				setTimeout(()=> {
-					this.getInfoData();
-				}, 5000)
-			},
+			// 	let params = {
+			// 		symbol: curSymbol,
+			// 		account: userAccount,
+			// 		preparedMargin: this.freeMargin,
+			// 	}
 
-			async getCurrentOrderList() {
-				let data = await this.$PB.getCurrentOrderList({})
-				data = data.data.data;
-				for ( let i = 0; i < data.length; i++ ) {
-					this.margin += data[i].margin;
-					this.profit += data[i].profit;
-				}
-				return data
-
-			},
-
-			async getDefaultVolume(userAccount, curSymbol) {
-				let data = await this.getCurrentOrderList();
-				const type = this.cookie.get('type');
-
-				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
-				this.freeMargin = this.netDeposit - parseFloat(this.margin);
-
-				let params = {
-					symbol: curSymbol,
-					account: userAccount,
-					preparedMargin: this.freeMargin,
-				}
-
-				this.$store.dispatch('countDefaultVolume', params);
-			},
+			// 	this.$store.dispatch('countDefaultVolume', params);
+			// },
 
 			/**
 		    * 获取交易品种的交易杠杆 (实际上这段代码就是calMarginWithOpenPrice方法中的一部分)
 		    * symbol: 从2.2.2.4 接口获取的symbol对象
 		    * account: 从2.2.2.5 接口获取的account对象
 		    **/
-			getLeverage(symbol, account) {
-				const type = 'demo';//this.isDemo() ? 'demo' : 'real';
-    			let max_leverage = symbol.policy.demo_max_leverage;//this.isDemo() ? symbol.policy.demo_max_leverage : symbol.policy.real_max_leverage;
+			// getLeverage(symbol, account) {
+			// 	const type = 'demo';//this.isDemo() ? 'demo' : 'real';
+   //  			let max_leverage = symbol.policy.demo_max_leverage;//this.isDemo() ? symbol.policy.demo_max_leverage : symbol.policy.real_max_leverage;
 
-    			let trading_leverage = account[type].leverage * symbol.policy.leverage_multiplier;
-   				max_leverage = parseFloat(max_leverage);
-    			trading_leverage = parseFloat(trading_leverage);
+   //  			let trading_leverage = account[type].leverage * symbol.policy.leverage_multiplier;
+   // 				max_leverage = parseFloat(max_leverage);
+   //  			trading_leverage = parseFloat(trading_leverage);
 
-				trading_leverage = trading_leverage < max_leverage ? trading_leverage : max_leverage;
+			// 	trading_leverage = trading_leverage < max_leverage ? trading_leverage : max_leverage;
 
-				// this.selectData.lever = trading_leverage;
+			// 	// this.selectData.lever = trading_leverage;
 
-    			return trading_leverage;
-			},
+   //  			return trading_leverage;
+			// },
 
 			updateChart() {
 
@@ -239,7 +215,31 @@
 
 				this.updateController = setTimeout( () => {
 					this.updateChart();
-				}, 1000 )
+				}, 500 )
+			},
+
+			_updateChart(cur_symbol, price) {
+				if (price) {
+					const subscribe_symbol = price.askPrice;
+					const bidPrice = parseFloat(price.bidPrice);
+					if (this.chartLastData) {
+
+						const curData1 = Date.now(),//Util.getTime(price[7]),
+						curData2 = this.chartLastData[2]&&this.chartLastData[2] < bidPrice ? bidPrice : this.chartLastData[2],
+						curData3 = this.chartLastData[3]&&this.chartLastData[3] < bidPrice ? bidPrice : this.chartLastData[3],
+						curData4 = bidPrice;
+
+						this.chartLastData.splice(0, 1, curData1);
+						this.chartLastData.splice(2, 1, curData2);
+						this.chartLastData.splice(3, 1, curData3);
+						this.chartLastData.splice(4, 1, curData4);
+
+						// updata the chart lastData
+						// HighStock.addChartPoint(this.chartLastData);
+					}	
+				} else {
+						// console.log('else: ' + price)
+				}
 			},
 
 			changeSelect() {
@@ -279,7 +279,6 @@
 			curSymbol_userAccount() {
 				const userAccount = this.$store.state.userAccount;
 				const curSymbol = this.$store.state.curSymbolInfoData[0];
-
 				if ( curSymbol ) {
 					this.unit = curSymbol.policy.min_quote_unit;
 					this.pip = curSymbol.policy.pip;
@@ -302,29 +301,7 @@
 					let cur_symbol = this.params.symbols,
 						price = prices[cur_symbol];
 
-					if (price) {
-
-						let cur_symbol = this.params.symbols,
-							subscribe_symbol = price.askPrice;
-						const bidPrice = parseFloat(price.bidPrice);
-						if (this.chartLastData) {
-
-							const curData1 = Date.now(),//Util.getTime(price[7]),
-							curData2 = this.chartLastData[2]&&this.chartLastData[2] < bidPrice ? bidPrice : this.chartLastData[2],
-							curData3 = this.chartLastData[3]&&this.chartLastData[3] < bidPrice ? bidPrice : this.chartLastData[3],
-							curData4 = bidPrice;
-
-							this.chartLastData.splice(0, 1, curData1);
-							this.chartLastData.splice(2, 1, curData2);
-							this.chartLastData.splice(3, 1, curData3);
-							this.chartLastData.splice(4, 1, curData4);
-
-							// updata the chart lastData
-							// HighStock.addChartPoint(this.chartLastData);
-						}	
-					} else {
-						// console.log('else: ' + price)
-					}
+					this._updateChart(cur_symbol, price);
 				},
 				deep: true,
 			},
@@ -334,8 +311,8 @@
 					userAccount = param.userAccount;
 				if (curSymbol && userAccount) {
 					// this.getDefaultVolume(userAccount.account, curSymbol);
-					let leverage = this.getLeverage(curSymbol, userAccount.account);
-					curSymbol.leverage = leverage;
+					// let leverage = this.getLeverage(curSymbol, userAccount.account);
+					// curSymbol.leverage = leverage;
 					return this.selectData = curSymbol;
 				}
 			}
