@@ -82,6 +82,8 @@
 		<span class="more" @click.stop='switchMore()'>
 			<span></span>
 		</span>
+
+		<my-popup :order_params='order_params'></my-popup>
 	</div>
 	
 </template>
@@ -347,7 +349,8 @@
 
 <script type="text/javascript">
 	import { mapMutations, mapGetters } from 'vuex';
-	import mixins from '../common/accountMixins'
+	import mixins from '../common/accountMixins';
+	import myPopup from '../components/trade-popup';
 	export default {
 		name: '',
 		mixins: [mixins],
@@ -375,10 +378,14 @@
 				openPrice: '--',
 				cur_symbol: '',
 				account: {},
+
+				order_params: {
+					success: false,
+					isGuadan: false,
+					order: null,
+				},
 			}
 		},
-
-		props: ['selectData', 'pip'],
 
 		methods: {
 			...mapMutations({
@@ -386,7 +393,7 @@
 				countUserMargin: 'COUNTUSERMARGIN',
 			}),
 			set_volume(add) {
-				this.step = parseFloat(this.pip);
+				this.step = parseFloat(this.step);
 
 				if (add) {
 					if ( this.value >= this.maxValume ) {
@@ -412,6 +419,7 @@
 				const type = this.cookie.get('type');
 				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
 				this.freeMargin = this.netDeposit - parseFloat(this.margin);
+
 				let volume = await this.calVolume(curSymbol, userAccount, this.freeMargin.toFixed(2));
 				this.changeVolume(volume);
 			},
@@ -550,7 +558,16 @@
       				data: data,
       				type: 'post'
 				}).then( (res) => {
-					console.log(res)
+					data = res.data;
+					console.log(data.status)
+					if ( data.status ) {
+						let params = {
+							success: true,
+							isGuadan: this.isGuadan,
+							order: data.data,
+						}
+						this.order_params = params;
+					}
 				})
 			}
 		},
@@ -569,6 +586,8 @@
 					this.checkSymbolStatus(curSymbol, userAccount);
 					// 计算默认交易量
 					this.getDefaultVolume(userAccount, curSymbol);
+
+					this.step = curSymbol.policy.pip;
 
 					return curSymbol;
 				}				
@@ -631,6 +650,10 @@
 					this.buy_price = curVal[symbol].askPrice;
 　　　　　　　　},
 			}
+		},
+
+		components: {
+			myPopup:  myPopup,
 		}
 	}
 </script>

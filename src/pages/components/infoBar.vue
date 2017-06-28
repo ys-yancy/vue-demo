@@ -83,16 +83,18 @@
 				diff: 0.00,
 				ratio: 0.00,
 				up: 0,
+				unit: 2, //curSymbol.policy.min_quote_unit
 				cachePrices: null,
 				isGetInData: false,
 				updateInfoBalContro: null,
 				info_data: {
-					price: '',
-					high: '',
-					low: '',
-					open: '',
-					yesterdayClose: '',
+					price: '--',
+					high: '--',
+					low: '--',
+					open: '--',
+					yesterdayClose: '--',
 				},
+				// 这里可以优化
 				todayPrice: {
 					unit: 0,
 					close: 0, 
@@ -126,7 +128,6 @@
 
 			async getInfoData(chchePrices) {
 				let cur_symbol = this.getCachePrice;
-				console.log(cur_symbol)
 				if ( !this.updateInfoBalContro ) {
 					clearTimeout(this.updateInfoBalContro)
 				}
@@ -152,11 +153,11 @@
 
 			updateInfoBar(prices) {
 				try{
-					this.info_data.price = prices.bidPrice ? prices.bidPrice : '- -';
-					this.info_data.high = this.todayPrice.high ? this.todayPrice.high : '- -';
-					this.info_data.low = this.todayPrice.low ? this.todayPrice.low : '- -';
-					this.info_data.open = this.todayPrice.open ? this.todayPrice.open : '- -';
-					this.info_data.yesterdayClose = this.yesterdayPrice.close ? this.yesterdayPrice.close : '- -';
+					this.info_data.price = prices.bidPrice ;
+					this.info_data.high = this.todayPrice.high;
+					this.info_data.low = this.todayPrice.low;
+					this.info_data.open = this.todayPrice.open;
+					this.info_data.yesterdayClose = this.yesterdayPrice.close;
 				}catch(e){
 					console.log(e)
 				}

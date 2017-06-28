@@ -18,7 +18,7 @@
 		<!--  账户信息条  -->
 		<my-account v-if='page == "option"' :bg_color='true'></my-account>
 		<!--  下单ui -->
-		<my-seclect v-if='page == "option"' :curPrice='curPrice' :pip='pip'></my-seclect>
+		<my-seclect v-if='page == "option"'></my-seclect>
 		<!-- 平仓及修改订单ui -->
 		<order-seclect v-else-if='page == "order"'></order-seclect>
 		<!--  历史订单ui -->
@@ -78,20 +78,9 @@
 
 		data() {
 			return {
-				up: false,
 				unit: '',
-				margin: 0,
-				profit: 0,
-				netDeposit: 0,
-				freeMargin: 0,
-				price: {
-					todayPrice: '',
-					yesterdayPrice: '',
-				},
-				defaultVol: 0,
 				pip: 0,
 				instance: '',
-				selectData: '',
 				chartLastData: null,
 				updateController: null,
 				//这一步稍后优化
@@ -105,6 +94,7 @@
 
 		methods: {
 			async getStockList( params = this.params ) {
+				// params 以后要解耦  从连接里拿
 				this.stockSymbolList.splice(0);
 				let data = await this.$PB.getStockSymbolList(params);
         		data = data.data.data.price;
@@ -151,54 +141,6 @@
 				}
 				this.instance = HighStock.initChart(data);	
 			},
-
-
-			// async getCurrentOrderList() {
-			// 	let data = await this.$PB.getCurrentOrderList({})
-			// 	data = data.data.data;
-			// 	for ( let i = 0; i < data.length; i++ ) {
-			// 		this.margin += data[i].margin;
-			// 		this.profit += data[i].profit;
-			// 	}
-			// 	return data
-
-			// },
-
-			// async getDefaultVolume(userAccount, curSymbol) {
-			// 	// let data = await this.getCurrentOrderList();
-			// 	const type = this.cookie.get('type');
-
-			// 	this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
-			// 	this.freeMargin = this.netDeposit - parseFloat(this.margin);
-
-			// 	let params = {
-			// 		symbol: curSymbol,
-			// 		account: userAccount,
-			// 		preparedMargin: this.freeMargin,
-			// 	}
-
-			// 	this.$store.dispatch('countDefaultVolume', params);
-			// },
-
-			/**
-		    * 获取交易品种的交易杠杆 (实际上这段代码就是calMarginWithOpenPrice方法中的一部分)
-		    * symbol: 从2.2.2.4 接口获取的symbol对象
-		    * account: 从2.2.2.5 接口获取的account对象
-		    **/
-			// getLeverage(symbol, account) {
-			// 	const type = 'demo';//this.isDemo() ? 'demo' : 'real';
-   //  			let max_leverage = symbol.policy.demo_max_leverage;//this.isDemo() ? symbol.policy.demo_max_leverage : symbol.policy.real_max_leverage;
-
-   //  			let trading_leverage = account[type].leverage * symbol.policy.leverage_multiplier;
-   // 				max_leverage = parseFloat(max_leverage);
-   //  			trading_leverage = parseFloat(trading_leverage);
-
-			// 	trading_leverage = trading_leverage < max_leverage ? trading_leverage : max_leverage;
-
-			// 	// this.selectData.lever = trading_leverage;
-
-   //  			return trading_leverage;
-			// },
 
 			updateChart() {
 
@@ -266,29 +208,6 @@
 			...mapGetters([
 				"getCachePrice"
 			]),
-
-			curPrice() {
-				let cachePrices = this.$store.state.cacheStompPrices,
-					cur_symbol = this.params.symbols;
-				if (cachePrices && cachePrices[cur_symbol]) {
-					return cachePrices[cur_symbol]
-				}
-				return;	
-			},
-
-			curSymbol_userAccount() {
-				const userAccount = this.$store.state.userAccount;
-				const curSymbol = this.$store.state.curSymbolInfoData[0];
-				if ( curSymbol ) {
-					this.unit = curSymbol.policy.min_quote_unit;
-					this.pip = curSymbol.policy.pip;
-				}
-
-				return {
-					userAccount,
-					curSymbol,
-				}
-			}
 		},
 
 		beforeDestroy() {
@@ -305,17 +224,6 @@
 				},
 				deep: true,
 			},
-
-			curSymbol_userAccount(param) {
-				const curSymbol = param.curSymbol,
-					userAccount = param.userAccount;
-				if (curSymbol && userAccount) {
-					// this.getDefaultVolume(userAccount.account, curSymbol);
-					// let leverage = this.getLeverage(curSymbol, userAccount.account);
-					// curSymbol.leverage = leverage;
-					return this.selectData = curSymbol;
-				}
-			}
 		},
 
 		components: {

@@ -90,8 +90,8 @@ export default {
 			        alg = 1;
 			    }
 
-			    let price = await this.getCurrentPrice(trading_home_symbol);
-
+			    let price = await this.getCurrentPrice(trading_home_symbol, true);
+			 
 			    if ( alg == 0 ) {
 		    		if (price && price.bid_price && price.ask_price) {
 			            trading_home_price = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
@@ -380,7 +380,7 @@ export default {
 				key = `${type}:${symbol}:curPrice`;
 
 			let ret = await this._getPrice(symbol, sourceObj);
-			
+
 			storage.set(key, ret);
     		return ret;
 		},
@@ -389,19 +389,22 @@ export default {
 		 * 
 		 */
 		async _getPrice(symbols, sourceObj) {
+			let prices = null;
 			// 这里阻塞
 			let curPrice = await this._getStorePrices(symbols);
 
-			//stomp 推下来
+			//stomp 推下来	
 			if ( curPrice && curPrice.length ) {
-				return curPrice;
+				prices = curPrice;
+			} else {
+				// 从接口拿
+				let symbol_price = Symbol.getQuoteKeys();
+
+				prices = await this.$PB.getSymbolsPrices(symbol_price);
 			}
-			// 从接口拿
-			let symbol_price = Symbol.getQuoteKeys();
-
-			let prices = await this.$PB.getSymbolsPrices(symbol_price);
-
+			
 			if (!sourceObj) {
+
 				return prices;
 			}
 
@@ -415,8 +418,9 @@ export default {
 	      			ask_price: [prices[i].ask_price[0]],
 				}
 				this.updateStompPrices(params);
-				if ( prices[i].symbol == symbols ) {	
-					return sourceObj = params;
+
+				if ( prices[i].symbol == symbols ) {
+					return params;
 				}
 			}
 			return sourceObj;

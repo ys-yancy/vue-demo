@@ -8,7 +8,9 @@
 		<!-- stock -->
 
 		<my-stock :params='params'></my-stock>
+
 		<my-login></my-login>
+
 	</div>
 </template>
 
@@ -25,9 +27,9 @@
 </style>
 
 <script type="text/javascript">
+	import myLogin from '../components/login';
 	import myHeader from '../components/header';
 	import myStock from '../components/highStock';
-	import myLogin from '../components/login';
 	export default {
 		name: 'pro-trading',
 
