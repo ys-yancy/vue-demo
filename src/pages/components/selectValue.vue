@@ -366,10 +366,6 @@
 				stopLoss: '0.00',
 				symbol_status: null,
 				isClose: null,
-				margin: 0,
-				profit: 0,
-				netDeposit: 0,
-				freeMargin: 0,
 				symbol: '',
 				more: false,
 				isGuadan: false,
@@ -416,11 +412,18 @@
 			},
 
 			async getDefaultVolume(userAccount, curSymbol) {
-				const type = this.cookie.get('type');
-				this.netDeposit = parseFloat(userAccount[type].balance) + parseFloat(this.profit);
-				this.freeMargin = this.netDeposit - parseFloat(this.margin);
+				let type = this.cookie.get('type');
 
-				let volume = await this.calVolume(curSymbol, userAccount, this.freeMargin.toFixed(2));
+				let orderList = await this.$PB.getCurrentOrderList();
+
+				let margin = orderList.margin;
+
+				let profit = this.getProfit || 0;
+
+				let netDeposit = parseFloat(userAccount[type].balance) + parseFloat(profit);
+				let freeMargin = netDeposit - parseFloat(margin);
+
+				let volume = await this.calVolume(curSymbol, userAccount, freeMargin);
 				this.changeVolume(volume);
 			},
 
@@ -576,7 +579,8 @@
 
 		computed: {
 			...mapGetters([
-				"getCachePrice"
+				"getCachePrice",
+				'getProfit',
 			]),
 
 			curSymbol() {

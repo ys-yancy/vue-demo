@@ -16,6 +16,7 @@ import {
 	COUNTUSERMARGIN,
 	COUNTDEFAULTVOLUME,
 	CACHECURORDERPRIFIT,
+	CACHEPROFITS,
 	CHAHESTOMPPRICES,
 } from './mutations_types';
 
@@ -81,6 +82,9 @@ export default {
 	// 以后优化
 	[CACHECURORDERPRIFIT]( state, profits ) {
 		state.cacheCurOrderProfit = profits;
+	},
+	[CACHEPROFITS](state, profits) {
+		state.chcheProfits = profits;
 	},
 	[CHAHESTOMPPRICES]( state, prices ) {
 		let symbol = prices.symbol;

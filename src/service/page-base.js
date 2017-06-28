@@ -103,10 +103,10 @@ export default {
 			token = Cookie.get('token'),
 			key = `${type}:${token}:curorder`
 
-		let cacheCurOrderList = Storage.get(key);
-		if ( cacheCurOrderList && !isSetUp ) {
-			return JSON.parse(cacheCurOrderList);
-		}
+		// let cacheCurOrderList = Storage.get(key);
+		// if ( cacheCurOrderList && !isSetUp ) {
+		// 	return JSON.parse(cacheCurOrderList);
+		// }
 		const params = {
 			url: 'v1/orders/' + Cookie.get('type') + '/current?',
 			type: 'GET',
@@ -116,9 +116,30 @@ export default {
 			},
 		}
 
-		let currentOrderList = await __.ajax(params);
-		Storage.set(key, currentOrderList);
-		return currentOrderList;
+		let orderList = await __.ajax(params);
+
+		orderList = orderList.data.data;
+		let margin = 0,
+			profit = 0,
+			symbols = [];
+
+		for ( let i = 0; i < orderList.length; i++ ) {
+			let symbol = orderList[i].symbol;
+			if (symbols.indexOf(symbol) === -1) {
+	  		symbols.push(symbol);
+	  		}
+	  		margin += parseFloat(orderList[i].margin);
+	  		profit += parseFloat(orderList[i].profit);
+		}
+				
+		let cacheorderList = {
+			list: orderList,
+			symbols: symbols,
+	        margin: margin,
+	        profit: profit,
+		};
+		Storage.set(key, cacheorderList);
+		return cacheorderList;
 	},
 
 	// 获取当前订单列表

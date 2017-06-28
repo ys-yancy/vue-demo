@@ -159,7 +159,7 @@
 					this.info_data.open = this.todayPrice.open;
 					this.info_data.yesterdayClose = this.yesterdayPrice.close;
 				}catch(e){
-					console.log(e)
+					// console.log()
 				}
 			},
 

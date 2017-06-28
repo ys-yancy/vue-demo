@@ -12,4 +12,8 @@ export default {
 			return cachePrices;
 		}
 	},
+
+	getProfit(state) {
+		return state.chcheProfits;
+	},
 }

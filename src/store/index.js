@@ -25,6 +25,7 @@ const state = {
 	curOrderMargin: 0, //占用保证金
 	defaultVolume: null, // 默认交易量
 	cacheCurOrderProfit: false,
+	chcheProfits: 0,
 	cacheStompPrices: {
 		triggerVier: 0, // 因为vue数据是响应式的， 所以加一个触发变量
 	},

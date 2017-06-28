@@ -127,18 +127,20 @@ export default {
    				price = price[0];
    			}
    			let midPirce = (parseFloat(price.bid_price) + parseFloat(price.ask_price)) / 2;
+
    			let margin = await this.getMargin(midPirce, symbol, volume, account);
    			return margin;
 		},
 
 		/**
-		 * 计算默认交易量, 使用可用保证金的10%算
+		 * 计算默认交易量, 使用可用保证金的50%算
 		 */	
 		async calVolume(symbol, account, preparedMargin) {
 			// let account = this.isDemo() ? account.demo : account.real;
 			let margin = await this.calMarginWithMarketPrice(symbol, symbol.policy.min_vol, account),
 				maxMargin = preparedMargin;
-			preparedMargin = preparedMargin * .1;
+
+			preparedMargin = preparedMargin * .5;
 			let volume = getVolume(preparedMargin),
 				maxVolume = getVolume(maxMargin);
 
@@ -155,8 +157,8 @@ export default {
 		        let min_vol = symbol.policy.min_vol;
 		        vol = vol * min_vol;
 		        if (min_vol < 1) {
-		          min_vol = 1 / min_vol;
-		          	vol = vol.toFixed(min_vol.toString().length - 1);
+		          	min_vol = 1 / min_vol;
+		         	vol = vol.toFixed(min_vol.toString().length - 1);
 		        } else {
 		          	vol = parseInt(vol / min_vol);
 		        }

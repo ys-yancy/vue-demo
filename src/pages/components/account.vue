@@ -273,6 +273,7 @@
 				setType: 'CHANGETYPE',
 				setIsShowLogin: 'ISSHOWLOGIN',
 				cacheProfits: 'CACHECURORDERPRIFIT',
+				cacheProfit: 'CACHEPROFITS',
 			}),
 
 			switchUnfold() {
@@ -311,7 +312,7 @@
 				let prices = profitRet.prices,
 					profit = profitRet.mainProfit,
 					floatOption = profitRet.floatList;
-
+				this.cacheProfit(profit);
 				this.cacheProfits(floatOption);
 
 				this._refreshAccount(account, orderList, prices, profit, floatOption);
@@ -344,27 +345,7 @@
 
 			async _getAccountFromCache() {
 				let orderList = await this.$PB.getCurrentOrderList();
-				orderList = orderList.data.data;
-				let margin = 0,
-					profit = 0,
-					symbols = [];
-
-
-				for ( let i = 0; i < orderList.length; i++ ) {
-					let symbol = orderList[i].symbol;
-					if (symbols.indexOf(symbol) === -1) {
-			  		symbols.push(symbol);
-			  		}
-			  		margin += parseFloat(orderList[i].margin);
-			  		profit += parseFloat(orderList[i].profit);
-				}
-				
-				return {
-					list: orderList,
-					symbols: symbols,
-			        margin: margin,
-			        profit: profit,
-				};
+				return orderList;
 			},
 
 			_refreshAccount(account, orderList, prices, profit, floatOption) {
