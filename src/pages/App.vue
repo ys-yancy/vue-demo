@@ -115,10 +115,10 @@
 		},
 		watch: {
 			$route(to, from) {
-				let _f = to.name,
+				let isConnentStomp = to.meta.requireStomp,
 					isConnect = this.$store.state.symbolCurrentPrice;
-				// 这有问题
-				!!_f&&!isConnect&&this.connect_stomp();
+				// symbolCurrentPrice 没用了   
+				isConnentStomp&&!isConnect&&this.connect_stomp();
 			}
 		}
 	}

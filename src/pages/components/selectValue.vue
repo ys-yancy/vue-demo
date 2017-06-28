@@ -560,13 +560,15 @@
 				}).then( (res) => {
 					data = res.data;
 					console.log(data.status)
-					if ( data.status ) {
+					if ( data.status == 200 ) {
 						let params = {
 							success: true,
 							isGuadan: this.isGuadan,
 							order: data.data,
 						}
 						this.order_params = params;
+						// 在这里获取当前订单
+						this.$PB.getCurrentOrderList({}, true);
 					}
 				})
 			}

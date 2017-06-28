@@ -176,7 +176,7 @@
 			},
 
 			getPopupParams(params) {
-
+				console.log(params)
 				if ( !params.order ) {
 					return this.order_params;
 				}

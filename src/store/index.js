@@ -9,7 +9,7 @@ Vue.use(Vuex);
 
 const state = {
 	symbolList: [],
-	symbolCurrentPrice: null,
+	symbolCurrentPrice: null, //  目前还有地反用到 之后全用cacheStompPrices
 	stockSymbolList: [],
 	infoData: [],
 	curSymbolInfoData: '',

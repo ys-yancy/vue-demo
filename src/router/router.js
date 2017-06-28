@@ -58,17 +58,26 @@ const routes = [
                 component: optionList,
                 meta: {
                     requireAuth: true,  // 添加该字段，表示进入这个路由是需要登录的
+                    requireStomp: true,
                 }, 
             },
             {
                 path: '/curretOrder',
                 name:'curretOrder', 
                 component: curretOrder,
+                meta: {
+                    requireAuth: true,
+                    requireStomp: true,
+                }
             },
             {
                 path: '/historyOrder',
                 name:'historyOrder', 
                 component: historyOrder,
+                meta: {
+                    requireAuth: true,
+                    requireStomp: true,
+                }
             },
         ]   
     },
@@ -77,6 +86,10 @@ const routes = [
         ]
     },
     { path: '/proTrading', component: proTrading,
+        meta: {
+            requireAuth: true,
+            requireStomp: true,
+        },
         children: [
         ]
     },
@@ -93,6 +106,10 @@ const routes = [
         ]
     },
     { path: '/orderShare', component: orderShare,
+        meta: {
+            requireAuth: true,
+            requireStomp: true,
+        },
         children: [
         ]
     },
