@@ -176,7 +176,7 @@
 			},
 
 			getPopupParams(params) {
-				console.log(params)
+				this.show = false;
 				if ( !params.order ) {
 					return this.order_params;
 				}
@@ -198,7 +198,7 @@
 
 				setTimeout( () => {
 					this.show = true;
-				}, 100);
+				}, 50);
 
 				return _params;
 
