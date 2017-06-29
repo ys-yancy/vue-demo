@@ -11,7 +11,7 @@ const state = {
 	symbolList: [],
 	symbolCurrentPrice: null, //  目前还有地反用到 之后全用cacheStompPrices
 	stockSymbolList: [],
-	infoData: [],
+	// infoData: [],
 	curSymbolInfoData: '',
 	userAccount: '',
 	isLogin: '',
