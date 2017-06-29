@@ -179,11 +179,12 @@ export default {
 		 */
 		async calMoney(account, symbol, volume, openPrice, stopLoss, takeProfit) {
 			account = this.isDemo() ? account.demo : account.real;
+
 			// 开仓价格与当前价格的价差, cmd还有挂单的可能性, 但是挂单没有浮动盈亏
-		    let stoploss_price_delta = 0;
+		    let stoploss_price_delta = 0,
 		    	takeprofit_price_delta = 0;
 		    // 品种trading_currency于账户home_currency的报价
-		    let trading_currency = symbol.policy.trading_currency;
+		    let trading_currency = symbol.policy.trading_currency,
 		    	trading_home_price = 0;
 	    	if (stopLoss != 0) {
 		      	stoploss_price_delta = stopLoss - openPrice;
@@ -383,7 +384,6 @@ export default {
 
 			let ret = await this._getPrice(symbol, sourceObj);
 
-			storage.set(key, ret);
     		return ret;
 		},
 
@@ -391,25 +391,17 @@ export default {
 		 * 
 		 */
 		async _getPrice(symbols, sourceObj) {
-			let prices = null;
+			let prices = null, ret = null;
 			// 这里阻塞
 			let curPrice = await this._getStorePrices(symbols);
-
 			//stomp 推下来	
 			if ( curPrice && curPrice.length ) {
 				prices = curPrice;
 			} else {
 				// 从接口拿
 				let symbol_price = Symbol.getQuoteKeys();
-
 				prices = await this.$PB.getSymbolsPrices(symbol_price);
 			}
-			
-			if (!sourceObj) {
-
-				return prices;
-			}
-
 			for ( let i = 0; i < prices.length; i++ ) {
 				let params = {
 					symbol: prices[i].symbol,
@@ -418,14 +410,18 @@ export default {
 	      			lastPrice: prices[i].last_price,
 	      			bid_price: [prices[i].bid_price[0]],
 	      			ask_price: [prices[i].ask_price[0]],
+	      			from: 'v2price',
 				}
+				
 				this.updateStompPrices(params);
-
 				if ( prices[i].symbol == symbols ) {
-					return params;
+					ret = params;
 				}
 			}
-			return sourceObj;
+
+			if (!sourceObj) return prices;
+
+			return ret;
 		},
 
 		async _getStorePrices(symbols) {

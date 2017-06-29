@@ -2,7 +2,6 @@ import {
 	OPTIONLISTDATA,
 	STOMPCURRENTPRICE,
 	STOCKSYMBOLLIST,
-	INFODATA,
 	CURSYMBOLINFO,
 	USERACCOUNT,
 	ISLOGIN,
@@ -13,8 +12,6 @@ import {
 	CURRENTORDERLIMT,
 	HISTORYORDERLIMT,
 	ALLOWFOLLOWINGLIMT,
-	COUNTUSERMARGIN,
-	COUNTDEFAULTVOLUME,
 	CACHECURORDERPRIFIT,
 	CACHEPROFITS,
 	CHAHESTOMPPRICES,
@@ -53,12 +50,8 @@ export default {
 		state.stockSymbolList = stockList;
 	},
 
-	[INFODATA]( state, infoData ) {
-		state.infoData = infoData;
-	},
-
 	[CURSYMBOLINFO]( state, curSymbolInfoData ) {
-		state.curSymbolInfoData = curSymbolInfoData;
+		state.curSymbolInfoData = curSymbolInfoData[0];
 	},
 
 	[WATCHDATALIMT]( state, limt ) {
@@ -73,12 +66,6 @@ export default {
 	[ALLOWFOLLOWINGLIMT]( state, limt ) {
 		state.allowFollowingLimt = limt;
 	},
-	[COUNTUSERMARGIN]( state, curOrderMargin ) {
-		state.curOrderMargin = curOrderMargin;
-	},
-	[COUNTDEFAULTVOLUME]( state, volume ) {
-		state.defaultVolume = volume;
-	},
 	// 以后优化
 	[CACHECURORDERPRIFIT]( state, profits ) {
 		state.cacheCurOrderProfit = profits;
@@ -88,7 +75,12 @@ export default {
 	},
 	[CHAHESTOMPPRICES]( state, prices ) {
 		let symbol = prices.symbol;
-		state.cacheStompPrices.triggerVier = state.cacheStompPrices.triggerVier ? 0 : 1;
+
+		if ( !state.isConnectStompSuccess && prices.from == 'stomp' ) {
+			state.isConnectStompSuccess = true;
+		}
+
+		state.cacheStompPrices.triggerVier = state.cacheStompPrices.triggerVier ? 0 : 1;	
 		state.cacheStompPrices[symbol] = prices;
 	}
 

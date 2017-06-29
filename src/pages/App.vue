@@ -116,8 +116,8 @@
 		watch: {
 			$route(to, from) {
 				let isConnentStomp = to.meta.requireStomp,
-					isConnect = this.$store.state.symbolCurrentPrice;
-				// symbolCurrentPrice 没用了   
+					isConnect = this.$store.state.isConnectStompSuccess;
+
 				isConnentStomp&&!isConnect&&this.connect_stomp();
 			}
 		}

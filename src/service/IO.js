@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import Toast from '../pages/common/Toast';
 export default {
 	errorMessage: {
 		'404': '没找到地址',
@@ -40,13 +40,15 @@ export default {
 			axios(defaultOptions).then(function(data) {
 
 				if ( data.status == 200 ) {
-
-					resolve(data);
+					
+					if ( data.data.status == 200 ) {
+						resolve(data);
+					} else if ( data.data.status == 400 ) {
+						new Toast('error', '服务器错误', 3);
+					}
 
 				} else {
-
-					if ( data.data.status == 403 ) {
-
+					if ( data.data.status == 400 ) {
 						//Toast提示
 						alert('密码错误')
 

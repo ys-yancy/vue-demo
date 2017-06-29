@@ -360,21 +360,17 @@
 				step: 0.5,
 				minValume: 0.1,
 				maxValume: 0.00,
+				userMargin: 0.00,
 				takePrice: '',
 				stopPrice: '',
 				takeProfit: '0.00',
 				stopLoss: '0.00',
 				symbol_status: null,
 				isClose: null,
-				symbol: '',
 				more: false,
 				isGuadan: false,
 				sell_price: '-- --',
 				buy_price: '-- --',
-				openPrice: '--',
-				cur_symbol: '',
-				account: {},
-
 				order_params: {
 					success: false,
 					isGuadan: false,
@@ -384,10 +380,24 @@
 		},
 
 		methods: {
-			...mapMutations({
-				changeVolume: 'COUNTDEFAULTVOLUME',
-				countUserMargin: 'COUNTUSERMARGIN',
-			}),
+			init(userAccount, curSymbol) {
+				if ( userAccount && curSymbol ) {
+
+					curSymbol.leverage = this.getLeverage(curSymbol, userAccount);
+
+					this.step = curSymbol.policy.pip;
+
+					//判断品种状态
+					this.checkSymbolStatus(curSymbol, userAccount);
+					// 计算默认交易量
+					this.getDefaultVolume(userAccount, curSymbol);
+
+					this.cur_symbol = curSymbol;
+
+					return this.cur_symbol;
+				}		
+			},
+
 			set_volume(add) {
 				this.step = parseFloat(this.step);
 
@@ -404,9 +414,7 @@
 					this.value = parseFloat(this.value - this.step).toFixed(2);
 				}
 
-				this.changeVolume({maxVolume: this.maxValume, volume: this.value});
-
-				return this.value;
+				this.changeDefaultVolume({maxVolume: this.maxValume, volume: this.value});
 			},
 
 			switchGuadan() {
@@ -428,26 +436,28 @@
 	
 				let volume = await this.calVolume(curSymbol, account, freeMargin);
 
-				this.changeVolume(volume);
-
-				this.changeDefaultVolume(account, curSymbol, volume);
+				this.changeDefaultVolume(volume);
 			},
 
-			// 优化重点
-			async changeDefaultVolume(userAccount, curSymbol, volume) {
+			async changeDefaultVolume(volume) {
 
 				this.value = parseFloat(volume.volume);
 				this.maxValume = parseFloat(volume.maxVolume);
 
-				let symbolName = this.$route.query.symbol,
-					price = this.getCachePrice[symbolName];
+				let getMarginCallback = this._getMargin();
 
-				let openPrice = ((parseFloat(price.askPrice) + parseFloat(price.bidPrice))/2).toFixed(2);
+				let userMargin = await getMarginCallback(volume.volume);
 
-				let margin = await this.getMargin( openPrice, curSymbol, this.value, userAccount );
+				this.userMargin = userMargin.toFixed(2);
+			},
 
-				this.countUserMargin(margin);
-					// } catch(e) {}
+			_getMargin() {
+				let _p = this.get_user_account_openprices();
+				return async (volume) => {
+					let margin = await this.getMargin(_p.openPrice, _p.curSymbol, volume, _p.account);
+					return margin;
+				}
+
 			},
 
 			async checkSymbolStatus(account, symbol) {
@@ -521,14 +531,43 @@
 
 				params.type = type;
 				return params;
+			},	
+
+			/**
+			 * [get_user_account_openprices] 
+			 * @return {[returnObj : account symbol, openPrices ]} moren返回全部
+			 */
+			get_user_account_openprices(returnObj) { 
+				let userAccount = this.$store.state.userAccount.account;
+				let curSymbol = this.$store.state.curSymbolInfoData;
+				let symbolName = this.$route.query.symbol,
+					price = this.getCachePrice[symbolName];
+
+				let openPrice = ((parseFloat(price.askPrice) + parseFloat(price.bidPrice))/2).toFixed(2);
+
+				if ( returnObj == 'account' ) {
+					return userAccount
+				} else if ( returnObj == 'symbol' ) {
+					return curSymbol;
+				} else if ( returnObj == 'openPrices' ) {
+					return openPrice;
+				} else {
+					returnObj = {
+						account: userAccount,
+						curSymbol,
+						openPrice,
+					}
+					return returnObj;
+				}
 			},
 
 			_addOrder(params, up) {
 				let accountType = this.$getType();
-				let slippage = parseFloat(this.cur_symbol.policy.default_slippage) * parseFloat(this.cur_symbol.policy.pip);
+				let cur_symbol = this.get_user_account_openprices('symbol');
+				let slippage = parseFloat(cur_symbol.policy.default_slippage) * parseFloat(cur_symbol.policy.pip);
 				let data = {
 			        access_token: this.cookie.get('token'),
-			        symbol: this.cur_symbol.policy.symbol,
+			        symbol: cur_symbol.policy.symbol,
 			        ui: 4,
 			        slippage: slippage
 			    };
@@ -583,24 +622,16 @@
 
 			curSymbol() {
 				const userAccount = this.$store.state.userAccount.account;
-				const curSymbol = this.$store.state.curSymbolInfoData[0];
-				if ( userAccount && curSymbol ) {
-					curSymbol.leverage = this.getLeverage(curSymbol, userAccount);
-					//判断品种状态
-					this.checkSymbolStatus(curSymbol, userAccount);
-					// 计算默认交易量
-					this.getDefaultVolume(userAccount, curSymbol);
-
-					this.step = curSymbol.policy.pip;
-
-					return curSymbol;
-				}				
+				const curSymbol = this.$store.state.curSymbolInfoData;
+				return this.init(userAccount, curSymbol);	
 			},
 
 			take_profit() {
-				let take_price = this.takePrice;
-				if (!take_price) return '0.00';
-				let ret = this.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, 0, take_price);
+				let _p = this.get_user_account_openprices();
+
+				if (!this.takePrice) return '0.00';
+
+				let ret = this.calMoney(_p.account, _p.curSymbol, this.value, _p.openPrice, 0, this.takePrice);
 
 				ret.then((calMoney) => {
 					this.takeProfit = parseFloat(calMoney.takeProfit).toFixed(2);
@@ -610,9 +641,11 @@
 			},
 
 			stop_loss() {
-				let stop_price = this.stopPrice;
-				if (!stop_price) return '0.00';
-				let ret = this.calMoney(this.account, this.cur_symbol, this.value, this.openPrice, stop_price, 0);
+				let _p = this.get_user_account_openprices();
+
+				if (!this.stopPrice) return '0.00';
+
+				let ret = this.calMoney(_p.account, _p.curSymbol, this.value, _p.openPrice, this.stopPrice, 0);
 
 				ret.then((calMoney) => {
 					this.stopLoss = parseFloat(calMoney.stopLoss).toFixed(2);
@@ -621,15 +654,10 @@
 				return this.stopLoss;
 			},
 
-			userMargin() {
-				return parseFloat(this.$store.state.curOrderMargin).toFixed(2);
-			},
-
 		},
 
 		created() {
-			// console.log(this.selectData)
-			// console.log(this.$store.state.cacheStompPrices)
+			
 		},
 
 		watch: {

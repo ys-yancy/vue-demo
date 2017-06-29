@@ -29,13 +29,6 @@ export default {
 		})
 	},
 
-	//没用到
-	getInfoData({commit, state}, options) {
-		_.getInfoData(options).then(function( infoData ) {
-			commit('INFODATA', infoData.data.data.price);	
-		})	
-	},
-
 	getUserLimt({commit, state}, options) {
 		_.getWatchdataLimt(options).then(function( infoData ) {
 			commit('WATCHDATALIMT', infoData.data.data.permission);	
@@ -65,6 +58,7 @@ export default {
           		lastPrice: symbolPrice[5],
           		bid_price: [symbolPrice[3]],
           		ask_price: [symbolPrice[1]],
+          		from: 'stomp',
 			}
 			commit('CHAHESTOMPPRICES', params);
 			commit('STOMPCURRENTPRICE', symbolPrice);
