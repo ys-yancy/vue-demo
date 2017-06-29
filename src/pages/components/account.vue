@@ -312,7 +312,9 @@
 				let prices = profitRet.prices,
 					profit = profitRet.mainProfit,
 					floatOption = profitRet.floatList;
+
 				this.cacheProfit(profit);
+				
 				this.cacheProfits(floatOption);
 
 				this._refreshAccount(account, orderList, prices, profit, floatOption);
@@ -356,7 +358,7 @@
 					
 					// 可用保证金
 					let freeMargin = netDeposit - parseFloat(orderList.margin);
-
+					
 					let margin = parseFloat(account[type].margin);
 	       			let bait = parseFloat(account[type].bait ? account[type].bait : 0);
 	       			// 保证金增金

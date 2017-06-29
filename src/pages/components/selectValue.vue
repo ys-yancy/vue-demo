@@ -403,7 +403,9 @@
 					}
 					this.value = parseFloat(this.value - this.step).toFixed(2);
 				}
+
 				this.changeVolume({maxVolume: this.maxValume, volume: this.value});
+
 				return this.value;
 			},
 
@@ -411,45 +413,41 @@
 				this.isGuadan = this.isGuadan ? false : true;
 			},
 
-			async getDefaultVolume(userAccount, curSymbol) {
+			async getDefaultVolume(account, curSymbol) {
 				let type = this.cookie.get('type');
-
 				let orderList = await this.$PB.getCurrentOrderList();
+				let profitRet = await this.getFloatingProfit(account, orderList.list, orderList.symbols);
 
-				let margin = orderList.margin;
+				let prices = profitRet.prices,
+					profit = profitRet.mainProfit,
+					floatOption = profitRet.floatList;
 
-				let profit = this.getProfit || 0;
+				let netDeposit = parseFloat(account[type].balance) + parseFloat(profit);
 
-				let netDeposit = parseFloat(userAccount[type].balance) + parseFloat(profit);
-				let freeMargin = netDeposit - parseFloat(margin);
+				let freeMargin = netDeposit - parseFloat(orderList.margin);
+	
+				let volume = await this.calVolume(curSymbol, account, freeMargin);
 
-				let volume = await this.calVolume(curSymbol, userAccount, freeMargin);
 				this.changeVolume(volume);
+
+				this.changeDefaultVolume(account, curSymbol, volume);
 			},
 
+			// 优化重点
 			async changeDefaultVolume(userAccount, curSymbol, volume) {
 
-				if (!!volume) {
-					this.value = parseFloat(volume.volume);
-					this.maxValume = parseFloat(volume.maxVolume);
+				this.value = parseFloat(volume.volume);
+				this.maxValume = parseFloat(volume.maxVolume);
 
-					if (curSymbol && userAccount) {
-						let type = this.cookie.get('type'),
-							symbol = curSymbol.policy.symbol,
-							key = `${type}:${symbol}:curPrice`;
+				let symbolName = this.$route.query.symbol,
+					price = this.getCachePrice[symbolName];
 
-						let price = await this.$PB.getStore(key);
+				let openPrice = ((parseFloat(price.askPrice) + parseFloat(price.bidPrice))/2).toFixed(2);
 
-						if ( Array.isArray(price) ) {
-							price = price[0]
-						}
-						
-						this.openPrice = ((parseFloat(price.ask_price) + parseFloat(price.bid_price))/2).toFixed(2);
+				let margin = await this.getMargin( openPrice, curSymbol, this.value, userAccount );
 
-						let margin = await this.getMargin( this.openPrice, curSymbol, this.value, userAccount.account );
-						this.countUserMargin(margin);
-					} 
-				}
+				this.countUserMargin(margin);
+					// } catch(e) {}
 			},
 
 			async checkSymbolStatus(account, symbol) {
@@ -623,13 +621,6 @@
 				return this.stopLoss;
 			},
 
-			defaultVolume() {
-				let defaultVolume =  this.$store.state.defaultVolume;
-				this.account = this.$store.state.userAccount.account;
-				this.cur_symbol = this.$store.state.curSymbolInfoData[0];
-				return defaultVolume;
-			},
-
 			userMargin() {
 				return parseFloat(this.$store.state.curOrderMargin).toFixed(2);
 			},
@@ -642,18 +633,15 @@
 		},
 
 		watch: {
-			defaultVolume(volume) {
-				const userAccount = this.$store.state.userAccount;
-				const curSymbol = this.$store.state.curSymbolInfoData[0];
-				this.changeDefaultVolume(userAccount, curSymbol, volume);
-			},
 
 			getCachePrice: {
 				deep: true,
 				handler: function(curVal, oldVal) {
 　　　　　　　　　	let symbol = this.$route.query.symbol;
-					this.sell_price = curVal[symbol].bidPrice;
-					this.buy_price = curVal[symbol].askPrice;
+					try{
+						this.sell_price = curVal[symbol].bidPrice;
+						this.buy_price = curVal[symbol].askPrice;	
+					}catch(e) {}	
 　　　　　　　　},
 			}
 		},

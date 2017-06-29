@@ -103,10 +103,10 @@ export default {
 			token = Cookie.get('token'),
 			key = `${type}:${token}:curorder`
 
-		// let cacheCurOrderList = Storage.get(key);
-		// if ( cacheCurOrderList && !isSetUp ) {
-		// 	return JSON.parse(cacheCurOrderList);
-		// }
+		let cacheCurOrderList = Storage.get(key);
+		if ( cacheCurOrderList && !isSetUp ) {
+			return JSON.parse(cacheCurOrderList);
+		}
 		const params = {
 			url: 'v1/orders/' + Cookie.get('type') + '/current?',
 			type: 'GET',

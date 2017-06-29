@@ -140,7 +140,7 @@ export default {
 			let margin = await this.calMarginWithMarketPrice(symbol, symbol.policy.min_vol, account),
 				maxMargin = preparedMargin;
 
-			preparedMargin = preparedMargin * .5;
+			preparedMargin = preparedMargin * .1;
 			let volume = getVolume(preparedMargin),
 				maxVolume = getVolume(maxMargin);
 
