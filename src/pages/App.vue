@@ -100,7 +100,7 @@
 			connect_stomp() {
 				this.$store.dispatch('getStompCurrentPrice');
 				setTimeout( () => {
-					let isConnect = this.$store.state.symbolCurrentPrice;
+					let isConnect = this.$store.state.isConnectStompSuccess;
 					if ( !isConnect ) {
 						this.connect_stomp();
 					}
