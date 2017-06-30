@@ -1,7 +1,7 @@
 <template>
 	<section class="option-list">
 		<ul id="J_list" class="list">
-			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol, page: "option"}}' tag='li' v-for=' (symbol, index) in symbolList ' :key='symbol.name' ref='symbolListNode'  >
+			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol, page: "option"}}' tag='li' v-for=' (symbol, key, index) in symbol_list ' :key='key' ref='symbolListNode'  >
 				<div class="symbol_wrapper" :class='{move: move == index}' > <!--class move-->
 				<!-- <div class="symbol_wrapper" :class='{move: move == index}'> -->
 					<div v-if='symbol.close' class="symbol_status">
@@ -211,7 +211,7 @@
 	**  在这里没用v-touch是因为:用了之后,如果拖动过程中出现水平方向倾向,则上下方向拖动失灵;
 	**  用了js原生Touch事件,也有Bug(touchmove只执行一次), 解决方法为设置某个区域左右滑动；
 	**/
-
+	import _s from '../common/symbol';
 	import { mapState, mapActions, mapMutations } from 'vuex';
 	import { mixins } from '../common/mixins';
 	export default {
@@ -226,16 +226,14 @@
 				move: null,
 				old_bidPrice: 0,
 				old_askPrice: 0,
-				symbol_list: [],
+				symbol_list: {},
 			}
 		},
 
 		methods: {
-			
-
-			...mapMutations([
-				'OPTIONLISTDATA',
-			]),
+			init() {
+				this.renderOptionLists();
+			},
 
 			swipeStart(e) {
 				this.startX = e.targetTouches[0].pageX;
@@ -266,19 +264,55 @@
 				return this.move = null;	
 			},
 
+			async renderOptionLists() {
+				let symbolList = await _s.getOptionSymbolList({access_token: this.cookie.get('token')});
+
+				symbolList.forEach( (symbol, index) => {
+					this.$PB.checkStatus(symbol).then((status)=> {					
+						const symbolParam = {
+							name: symbol.quote.name,
+							symbol: symbol.quote.symbol,
+							ask_price: symbol.quote.ask_price[0],
+							bid_price: symbol.quote.bid_price[0],
+							close_price: symbol.close_price,
+							isUp: 1,
+							isBgUp: 1,
+							close: (status && status.type) == 'close' ? true : false,
+						}
+						
+						this.$set(this.symbol_list, symbolParam.symbol, symbolParam);
+					});
+				});
+
+				return this.symbol_list;
+			},
+
 			delSymbol(symbol, index) {
 				let isDel = this.removeSymbol(symbol);
 
 				if (isDel) {
-					let curOptionSymbolList = this.$store.state.symbolList;
-					curOptionSymbolList.splice(index, 1);
-
-					this.symbol_list.splice(index, 1);
-
-					this.OPTIONLISTDATA(curOptionSymbolList);
+					delete this.symbol_list[symbol];
+					// 从storage中删除
 				};
 
 				return this.move = null;
+			},
+
+			updatePrices(prices) {
+				Object.keys(this.symbol_list).forEach( (key, index) => {
+					if ( prices[key] ) {
+						//(新价格.bid >= 老价格.bid || 新价格.ask >= 老价格.ask) 两个报价颜色设置为红色
+						let is_up = (prices[key].bidPrice - this.symbol_list[key].bid_price || prices[key].askPrice - this.symbol_list[key].ask_price) > 0 ? true : false;
+
+						// if (涨幅>0) {涨幅背景为红色}
+						let is_bgUp = ((+prices[key].bidPrice) + (+prices[key].askPrice) - 2 * this.symbol_list[key].close_price) > 0 ? true : false;
+
+						this.symbol_list[key].isUp = is_up;
+						this.symbol_list[key].isBgUp = is_bgUp;
+						this.symbol_list[key].ask_price = prices[key].askPrice;
+						this.symbol_list[key].bid_price = prices[key].bidPrice;
+					}
+				})
 			},
 		},
 
@@ -287,90 +321,34 @@
 		},
 
 		created() {
-			this.$store.dispatch('getOptionList', {
-				access_token: this.cookie.get('token'),
-			});
+			this.init();
 		},
 
 		computed: {
-			symbolList() {
-				// 做个练习  真的的数据处理交给vuex处理
-				const symbolList = this.$store.state.symbolList;
-				const symbolStompList = this.$store.state.symbolCurrentPrice;
-				// 有个bug   在这里先解决一下
-				for ( let i = 0; i < symbolList.length&&(this.symbol_list.length <= symbolList.length -1); i++ ) {
-					this.$PB.checkStatus(symbolList[i]).then((status)=> {					
-						const symbolParam = {
-							name: symbolList[i].quote.name,
-							symbol: symbolList[i].quote.symbol,
-							ask_price: symbolList[i].quote.ask_price[0],
-							bid_price: symbolList[i].quote.bid_price[0],
-							close_price: symbolList[i].close_price,
-							isUp: 1,
-							isBgUp: 1,
-							close: (status && status.type) == 'close' ? true : false,
-						}
-						this.symbol_list.push(symbolParam);
-					});
-				}
-
-				if ( this.symbol_list.length && !!symbolStompList ) {
-					for ( let i = 0; i < this.symbol_list.length; i++ ) {
-						if ( this.symbol_list[i].symbol === symbolStompList[0] ) {
-
-							//(新价格.bid >= 老价格.bid || 新价格.ask >= 老价格.ask) 两个报价颜色设置为红色
-							const is_up = (symbolStompList[3] - this.symbol_list[i].bid_price || symbolStompList[1] - this.symbol_list[i].ask_price) > 0 ? true : false;
-
-							// if (涨幅>0) {涨幅背景为红色}
-							const is_bgUp = ((+symbolStompList[3]) + (+symbolStompList[1]) - 2 * this.symbol_list[i].close_price) > 0 ? true : false;
-
-							const newSymbolParam = {
-								name: this.symbol_list[i].name,
-								symbol: this.symbol_list[i].symbol,
-								bid_price: symbolStompList[3],
-								ask_price: symbolStompList[1],
-								close_price: this.symbol_list[i].close_price,
-								isUp: is_up,
-								isBgUp: is_bgUp,
-								close: this.symbol_list[i].close,
-							}
-
-							this.$set( this.symbol_list, i, newSymbolParam );
-						}
-					}
-				}
-
-				return this.symbol_list;
-			},
 			...mapState({
-				list: state=> state.symbolList,
 				type: state=> state.type,
+				cachePrices: state=> state.cacheStompPrices,
 			}),
 
 		},
 
 		watch: {
-			list( list ) {
-				let stompIsConnect = !this.$store.state.symbolCurrentPrice;
-				if ( !!list && stompIsConnect ) {
-					// 在这理触发stomp
-					// this.$store.dispatch('getStompCurrentPrice');
-				}
-			},
-
-			symbol_list(list) {
-
-			},
 
 			type(type) {
 				// 刷新数据在这里进行
 				const isShowLogin = this.$store.state.isShowLogin;
+
 				if (!isShowLogin) {
-					this.$store.dispatch('getOptionList', {
-						access_token: this.cookie.get('token'),
-					});
+					this.init();
 				}
-			}
+			},
+
+			cachePrices: {
+				deep: true,
+				handler(prices) {
+					this.updatePrices(prices);
+				}
+			},
 		}
 	}
 

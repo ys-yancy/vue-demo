@@ -8,7 +8,6 @@ import cookie from '../pages/lib/cookie'
 Vue.use(Vuex);
 
 const state = {
-	symbolList: [],
 	symbolCurrentPrice: null, //  目前还有地反用到 之后全用cacheStompPrices
 	stockSymbolList: [],
 	// infoData: [],
@@ -24,7 +23,7 @@ const state = {
 	allowFollowingLimt: 1,
 	cacheCurOrderProfit: false,
 	chcheProfits: 0,
-	isConnectStompSuccess: false,
+	isConnectStompSuccess: false, // 是否连上stomp
 	cacheStompPrices: {
 		triggerVier: 0, // 因为vue数据是响应式的， 所以加一个触发变量
 		// fromStomp: false, //价格是否来自stomp

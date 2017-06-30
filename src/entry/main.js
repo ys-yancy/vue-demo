@@ -15,6 +15,7 @@ Vue.config.debug = true;
 window.log = console.log;
 
 Vue.prototype.ajax = IO.ajax;
+Vue.prototype.errorMessage = IO.errorMessage;
 
 Vue.prototype.cookie = Cookie;
 

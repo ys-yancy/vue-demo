@@ -141,34 +141,34 @@
 
 		data() {
 			return {
-				order_list: null,
+				order_list: {},
 			}
 		},
 
 		methods: {
 			async getCurrentOrderList() {
 				let data = await this.$PB.getCurrentOrderList({});
-				let list = data.data.data,
-					_list = {
-						*[Symbol.iterator]() {
-							yield this;
-						}
-					};
+				let list = data.list;
+					// _list = {
+					// 	*[Symbol.iterator]() {  // 相当于next函数
+					// 		yield this;
+					// 	}
+					// };
 				for ( let i = 0; i < list.length; i++ ) {
-					let tik = list[i].ticket,
-						key = `${tik}:${list[i].symbol}`;
-					_list[key] = list[i];
+					// let tik = list[i].ticket,
+						// key = `${tik}:${list[i].symbol}`;
+					let	key = list[i].symbol
+					this.$set(this.order_list, key, list[i]);
 				}
-				return this.order_list = _list;
+
+				return this.order_list
 			},
 
-			updatePrice(price) {
-				let symbol = price[0],
-					symbol_price = price[3];
+			updatePrice(prices) {
 				let orderListSymbols = Object.keys(this.order_list);
 				orderListSymbols.forEach( (item, index) => {
-					if ( item.indexOf(symbol) !== -1 ) {
-						this.order_list[item].price = symbol_price;
+					if ( prices[item] ) {
+						this.order_list[item].price = prices[item].bidPrice;
 					}
 				});
 			}
@@ -177,7 +177,7 @@
 		computed: {
 			...mapState({
 				profits: state => state.cacheCurOrderProfit,
-				price: state => state.symbolCurrentPrice,
+				cachePrice: state => state.cacheStompPrices,
 			}),
 
 
@@ -191,8 +191,11 @@
 		},
 
 		watch: {
-			price(price) {
-				this.updatePrice(price);
+			cachePrice: {
+				deep: true,
+				handler(prices) {
+					this.updatePrice(prices);
+				}
 			}
 		},
 	}

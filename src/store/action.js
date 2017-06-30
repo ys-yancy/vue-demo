@@ -8,13 +8,6 @@ export default {
 		})
 	},
 
-	// 获取交易页面的symbol
-	getOptionList( {commit, state}, options ) {
-		symbol.getOptionSymbolList(options).then(( optionList ) => {
-			commit('OPTIONLISTDATA', optionList);	
-		})	
-	},
-
 	// 获取k线数据
 	getStockSymbolList( {commit, state}, options ) {
 		_.getStockSymbolList(options).then(function( StockSymbolList ) {

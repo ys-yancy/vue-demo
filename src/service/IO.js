@@ -2,7 +2,7 @@ import axios from 'axios';
 import Toast from '../pages/common/Toast';
 export default {
 	errorMessage: {
-		'404': '没找到地址',
+		'400': '没找到地址',
 	},
 
 	ajax(options) {
@@ -35,16 +35,26 @@ export default {
   			// withCredentials: true,
 		}
 
-		const d = new Promise(function(resolve, reject) {
+		const d = new Promise( (resolve, reject) => {
 
-			axios(defaultOptions).then(function(data) {
+			axios(defaultOptions).then( (data) => {
 
 				if ( data.status == 200 ) {
 					
 					if ( data.data.status == 200 ) {
 						resolve(data);
-					} else if ( data.data.status == 400 ) {
-						new Toast('error', '服务器错误', 3);
+					} else if ( data.data.status == 404 ) {
+						
+					} else {
+						let errCode = new String(data.data.status);
+						let str = errCode + ': ';
+						if ( this.errorMessage[errCode] )
+							str += this.errorMessage[errCode];
+						else 
+							str += '未知错误';
+						if ( !options.noToast ) {
+							new Toast('error', str);
+						}
 					}
 
 				} else {
@@ -56,7 +66,7 @@ export default {
 
 					reject(data)
 				}
-			}, function(err) {
+			}, (err) => {
 
 				if ( err.status ) {
 

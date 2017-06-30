@@ -1,5 +1,4 @@
 import {
-	OPTIONLISTDATA,
 	STOMPCURRENTPRICE,
 	STOCKSYMBOLLIST,
 	CURSYMBOLINFO,
@@ -36,10 +35,6 @@ export default {
 
 	[ISSHOWLOGIN]( state, isShowLogin ) {
 		state.isShowLogin = isShowLogin;
-	},
-
-	[OPTIONLISTDATA]( state, dataList ) {
-		state.symbolList = dataList;
 	},
 
 	[STOMPCURRENTPRICE]( state, CurrentPrice ) {
