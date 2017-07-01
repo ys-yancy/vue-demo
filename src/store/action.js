@@ -8,13 +8,6 @@ export default {
 		})
 	},
 
-	// 获取k线数据
-	getStockSymbolList( {commit, state}, options ) {
-		_.getStockSymbolList(options).then(function( StockSymbolList ) {
-			commit('STOCKSYMBOLLIST', StockSymbolList.data.data.price);	
-		})	
-	},
-
 	// 获取当前symbol信息
 	getCurSymbolInfo( {commit, state}, options ) {
 		_.getCurSymbolInfo(options).then(function( CurSymbolInfo ) {

@@ -394,12 +394,13 @@ export default {
 			let prices = null, ret = null;
 			// 这里阻塞
 			let curPrice = await this._getStorePrices(symbols);
+
 			//stomp 推下来	
 			if ( curPrice && curPrice.length ) {
 				prices = curPrice;
 			} else {
 				// 从接口拿
-				let symbol_price = Symbol.getQuoteKeys();
+				let symbol_price = await Symbol.getQuoteKeys(symbols);
 				prices = await this.$PB.getSymbolsPrices(symbol_price);
 			}
 			for ( let i = 0; i < prices.length; i++ ) {
@@ -412,7 +413,7 @@ export default {
 	      			ask_price: [prices[i].ask_price[0]],
 	      			from: 'v2price',
 				}
-				
+
 				this.updateStompPrices(params);
 				if ( prices[i].symbol == symbols ) {
 					ret = params;
@@ -426,6 +427,7 @@ export default {
 
 		async _getStorePrices(symbols) {
 			let cachePrices = await this.getStompPrices();
+
 			let all = true,
 				prices = [],
 	    		newSymbols = [];

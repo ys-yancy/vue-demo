@@ -4,43 +4,78 @@ import io from '../../service/IO';
 import F from '../lib/frame';
 
 export default {
-	async getOptionSymbolList( options ) {
-
-		let cacheSymbolList = this.getOptionSymbols();
-		let expires = cacheSymbolList&&cacheSymbolList.expires,
-			no_time = Date.now();
-
-		if ( cacheSymbolList && no_time < expires ) {
-			let _cacheSymbolList = [];
-			Object.keys(cacheSymbolList).forEach( (key, index) => {
-				key && key !== 'expires' && _cacheSymbolList.push(cacheSymbolList[key])
-			} )
-			return _cacheSymbolList;
-		} else {
-			let key = this._getOptionSymbolListStoragekey();
-			storage.removeValue(key);
-		}
-
-		options.url = 'v3/' + cookie.get('type') + '/symbols6/';
-
-		options._r = Math.random();
-
-		const params = {
-			url: options.url,
-			type: "GET",
-			data: {
-				access_token: options.access_token,
-				_r: options._r,
-			},
-		}
-
-		let symbolData = await io.ajax(params);
-		let symbolList = symbolData.data.data;
-
-		//将获取到的symbol存起来
-		this.saveSymbols(symbolData);
-		return symbolList;
+	cacheSymbols: {
+		demo: {},
+		real: {},
 	},
+
+	emptySymbols: {
+	  	demo: {},
+	  	real: {}
+	},
+
+	async get( symbols ) {
+
+		let optionList = this._get(symbols);
+
+		//如果存在缓存直接读取
+		if ( optionList ) {
+			return optionList;
+		} else {
+			let params = new Object();
+			params.type = 'GET';
+			params.url = 'http://price.invhero.com/v2/symbol/snapshot?';
+			params.data = {
+				access_token: cookie.get('token'),
+				group_name: cookie.get(`${cookie.get('type')}_group`) || 'real_default',
+          		invite_code: '',
+          		format: 'json',
+			}
+			params.unjoin = true;
+			let symbolsArray = [],cache = this.emptySymbols[cookie.get('type')];
+
+		    symbols.forEach((symbol) => {
+		        if (!cache[symbol]) {
+		          symbolsArray.push(symbol);
+		        }
+		    });
+
+		    if ( symbolsArray.length === 0 ) {
+		    	return [];
+		    } else {
+		    	let optionList = this._get(symbolsArray);
+		        if (optionList) {
+		          return optionList;
+		        }
+		    }
+
+		    params.data.symbols = symbolsArray.join(',');
+		    
+		    let data = await io.ajax(params);
+		    data = data.data.data;
+
+		    symbols.forEach((symbol) => {
+	            if (!this._inSymbol(data, symbol)) {
+	              cache[symbol] = true;
+	            }
+          	});
+
+		    this.saveSymbols(data);
+			return data;
+		}
+
+	},
+
+	_inSymbol: function(data, symbol) {
+	    let inArray = false;
+	    data.forEach((item) => {
+	      if (item.policy.symbol === symbol) {
+	        inArray = true;
+	      }
+	    });
+
+	    return inArray;
+  	},
 
 	getStompCurrentPrice(onmessage_callback) {
 		this.client && this.client.disconnect();
@@ -90,34 +125,25 @@ export default {
 	},
 
 	saveSymbols(symbols) {
-		symbols = symbols.data.data;
-		let cache = {};
+		let cache = this.cacheSymbols[cookie.get('type')];
 		for ( let i = 0; i < symbols.length; i++ ) {
 			cache[symbols[i].policy.symbol] = symbols[i];
 		}
 		this._saveLocal(cache);
 	},
 
-	getQuoteKeys(symbols) {
-		let type = cookie.get('type') === 'demo' ? 'demo' : 'real';
-	    let list = this.getOptionSymbols(true);
-	    if ( symbols ) {
-	    	list = symbols;
-	    }
-
-	    list = list.map((item, index) => {
-	    	return `quote.${type}_default.${item}`;
-	    });
+	async getQuoteKeys(symbols) {
+		let list = [];
+		let optionList = await this.get(symbols);
+		
+		for ( let key in optionList ) {
+			list.push(optionList[key].policy.quote_sub_routing_key);
+		}
 	    return list.join(',')
-
   	},
 
   	getOptionSymbols(isKey) {
   		let optionLists = this._getSelfSymbols();
-  		if (isKey) {
-  			return Object.keys(optionLists);
-  		} 
-
   		return optionLists;
   	},
 
@@ -130,7 +156,7 @@ export default {
 			}, 500 );
 			return;
   		}
-  		callback(Object.keys(optionLists))
+  		callback(optionLists)
   	},
 
   	_add(symbols, callback) {
@@ -164,21 +190,35 @@ export default {
 	    // });
   	},
 
+  	_get(symbols) {
+	    var type = cookie.get('type');
+
+	    var cache = this.cacheSymbols[type];
+	    var optionList = [];
+
+	    for (let i = 0, len = symbols.length; i < len; i++) {
+		    let symbol = symbols[i];
+		    if (cache[symbol]) {
+		        optionList.push(cache[symbol]);
+		    } else {
+		        return undefined;
+		    }
+	    }
+
+	    return optionList;
+  	},
+
 	_saveLocal(cache) {
 		let key = this._getOptionSymbolListStoragekey();
     	let mySymbols = storage.get(key);
     	if (mySymbols) {
     		mySymbols = JSON.parse(mySymbols);
     	} else {
-    		mySymbols = {};
-    		Object.defineProperty(mySymbols, 'expires', {
-    			enumerable: true,
-    			value: Date.now() + 1000 * 60 * 60 * 1,  // 单位 s option 列表过期时间
-    		})
+    		mySymbols = [];
     	}
     	Object.keys(cache).forEach((key, index) => {
-    		if (!mySymbols[key]) {
-    			mySymbols[key] = cache[key]
+    		if (mySymbols.indexOf(key) === -1) {
+    			mySymbols.push(key)
     		}
     	});
     	storage.set(key, mySymbols);
@@ -187,7 +227,6 @@ export default {
 	_allIn(symbols) {
 	    let all = true;
 	    let this_symbols = this.getOptionSymbols(true);
-
 	    this_symbols.forEach((symbol) => {
 	      	if (symbols.indexOf(symbol) === -1) {
 	        	all = false;
@@ -198,9 +237,16 @@ export default {
   	},
 
   	_getSelfSymbols() {
-  		let key = this._getOptionSymbolListStoragekey();
-    	let symbols = JSON.parse(storage.get(key));
-    	return symbols
+  		let symolKey = this._getOptionSymbolListStoragekey();
+  		let optionKey = cookie.get('type') === 'demo' ? 'demoOptionList' : 'optionList';
+  		let mySymbol = JSON.parse(storage.get(symolKey));
+  		let optionSym = JSON.parse(storage.get(`${cookie.get('token')}${optionKey}`));
+  		optionSym.forEach( (item, index) => {
+  			if ( mySymbol.indexOf(item) === -1 ) {
+  				mySymbol.push(item)
+  			}
+  		})
+    	return mySymbol;
   	},
 
   	_getOptionSymbolListStoragekey() {

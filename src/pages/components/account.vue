@@ -312,7 +312,6 @@
 				let prices = profitRet.prices,
 					profit = profitRet.mainProfit,
 					floatOption = profitRet.floatList;
-
 				this.cacheProfit(profit);
 				
 				this.cacheProfits(floatOption);

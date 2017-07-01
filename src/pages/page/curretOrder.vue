@@ -14,7 +14,7 @@
 							<p class="name">盈亏</p>
 							<p class="J_Formate no-guadan down" 
 							:class="{ up: profits[symbol.ticket] > 0, down: profits[symbol.ticket] <= 0 }">
-								{{ profits && parseFloat(profits[symbol.ticket]).toFixed(2) || symbol.profit }}
+								{{ symbol.profit }}
 							</p>
 						</li>
 						<li>
@@ -155,26 +155,35 @@
 					// 	}
 					// };
 				for ( let i = 0; i < list.length; i++ ) {
-					// let tik = list[i].ticket,
-						// key = `${tik}:${list[i].symbol}`;
-					let	key = list[i].symbol
+					let tik = list[i].ticket,
+						key = `${tik}:${list[i].symbol}`;
 					this.$set(this.order_list, key, list[i]);
 				}
-
-				return this.order_list
+				return this.order_list;
 			},
 
-			updatePrice(prices) {
+			update(prices) {
 				let orderListSymbols = Object.keys(this.order_list);
+				let profits = Object.keys(this.profits);
 				orderListSymbols.forEach( (item, index) => {
-					if ( prices[item] ) {
-						this.order_list[item].price = prices[item].bidPrice;
+					let keys = item.split(':'),
+						tk = keys[0],
+						sk = keys[1];
+
+					if ( prices[sk] ) {
+						this.order_list[item].price = prices[sk].bidPrice;
+
+						if ( profits.length ) {
+							// 如果有盈亏则更新
+							this.order_list[item].profit = profits[tk];
+						}
 					}
 				});
-			}
+			},
 		},
 
 		computed: {
+			// 浮动盈亏更新有问题
 			...mapState({
 				profits: state => state.cacheCurOrderProfit,
 				cachePrice: state => state.cacheStompPrices,
@@ -194,9 +203,9 @@
 			cachePrice: {
 				deep: true,
 				handler(prices) {
-					this.updatePrice(prices);
+					this.update(prices);
 				}
-			}
+			},
 		},
 	}
 </script>

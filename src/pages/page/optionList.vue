@@ -265,7 +265,7 @@
 			},
 
 			async renderOptionLists() {
-				let symbolList = await _s.getOptionSymbolList({access_token: this.cookie.get('token')});
+				let symbolList = await this.$PB.getOptionSymbolList();
 
 				symbolList.forEach( (symbol, index) => {
 					this.$PB.checkStatus(symbol).then((status)=> {					

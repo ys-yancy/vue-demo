@@ -1,6 +1,5 @@
 import {
 	STOMPCURRENTPRICE,
-	STOCKSYMBOLLIST,
 	CURSYMBOLINFO,
 	USERACCOUNT,
 	ISLOGIN,
@@ -39,10 +38,6 @@ export default {
 
 	[STOMPCURRENTPRICE]( state, CurrentPrice ) {
 		state.symbolCurrentPrice = CurrentPrice;
-	},
-
-	[STOCKSYMBOLLIST]( state, stockList ) {
-		state.stockSymbolList = stockList;
 	},
 
 	[CURSYMBOLINFO]( state, curSymbolInfoData ) {

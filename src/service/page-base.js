@@ -5,7 +5,6 @@ import Storage from '../pages/common/storage';
 import Symbol from '../pages/common/symbol';
 import Symbols from '../pages/common/symbols';
 export default {
-	price: {},
 	/*
 	*  @ token  	   测试服
 	*  @ ccess_token   生产服
@@ -37,6 +36,30 @@ export default {
 		Cookie.set('real_group', account.data.data.account.real.group_name);
 
 		return account.data.data;
+	},
+
+	async getOptionSymbolList() {
+		let demo = this.isDemo();
+		let url = demo ? '/v3/demo/symbols6' : '/v3/real/symbols6';
+		const params = {
+			url,
+			type: 'GET',
+			data: {
+				access_token: Cookie.get('token'),
+        		_r: Math.random(),
+			},
+		}
+
+		let data = await __.ajax(params);
+
+		data = data.data.data;
+
+		let optionSymbolList = [], key = this.isDemo() ? 'demoOptionList' : 'optionList'
+		optionSymbolList = data.map( (item, index) => {
+			return item.policy.symbol;
+		});
+		Storage.set(`${Cookie.get('token')}${key}`, optionSymbolList);
+		return data;
 	},
 
 	//获取k线图数据
@@ -99,14 +122,21 @@ export default {
 
 	// 获取当前订单列表
 	async getCurrentOrderList(options, isSetUp) {
-		let type = Cookie.get('type'),
-			token = Cookie.get('token'),
-			key = `${type}:${token}:curorder`
-
+		let key = this.getStorageKey('curorder');
 		let cacheCurOrderList = Storage.get(key);
+		cacheCurOrderList = JSON.parse(cacheCurOrderList);
+
 		if ( cacheCurOrderList && !isSetUp ) {
-			return JSON.parse(cacheCurOrderList);
+			if (!!cacheCurOrderList.exp) {
+				let now_time = Date.now();
+				if ( now_time < cacheCurOrderList.exp ) {
+
+					return cacheCurOrderList;
+				}
+			}		
 		}
+
+
 		const params = {
 			url: 'v1/orders/' + Cookie.get('type') + '/current?',
 			type: 'GET',
@@ -138,11 +168,16 @@ export default {
 	        margin: margin,
 	        profit: profit,
 		};
+		Object.defineProperty(cacheorderList, 'exp', {
+			enumerable: true,
+			writable: false,
+			value: Date.now() + 1000 * 30
+		})
 		Storage.set(key, cacheorderList);
 		return cacheorderList;
 	},
 
-	// 获取当前订单列表
+	// 获取历史订单列表
 	async getHistoryOrderList(options) {
 		const params = {
 			url: 'v1/orders/' + Cookie.get('type') + '/history/list?',
@@ -271,6 +306,13 @@ export default {
     	} else {
     		return status;
     	}
+	},
+
+	getStorageKey(info) {
+		let type = Cookie.get('type'),
+			token = Cookie.get('token');
+		return `${type}:${token}:${info}`
+
 	},
 
 	async getStore(key) {
