@@ -304,7 +304,23 @@ export default {
       		status.type = 'simulate';
       		return status;
     	} else {
-    		return status;
+    		return {};
+    		// 如果已经开仓了, 那么就不用检查余额不足了
+    		// if (false) {
+      //   		return {};
+    		// } else {
+    		// 	let free_margin = account.free_margin;
+		    //     this.calMarginWithMarketPrice(symbol, symbol.policy.min_vol, account).then(function(margin) {
+			   //      if (free_margin <= margin) {
+			   //          return {
+			   //            	tag: '余额不足',
+			   //            	type: 'more-money',
+			   //          }
+			   //      } else {
+			   //          return {}
+			   //      }
+		    //     });
+    		// }
     	}
 	},
 

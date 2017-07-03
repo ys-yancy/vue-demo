@@ -460,8 +460,8 @@
 
 			},
 
-			async checkSymbolStatus(account, symbol) {
-				let status = await this.$PB.checkStatus(account, symbol);
+			async checkSymbolStatus(symbol, account) {
+				let status = await this.$PB.checkStatus(symbol, account);
 				this.isClose = status.type == 'close' ? true : false;
 				return this.symbol_status = status;
 			},
