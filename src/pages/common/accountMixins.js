@@ -426,6 +426,8 @@ export default {
 		},
 
 		async _getStorePrices(symbols) {
+			Symbol.add(symbols);
+			
 			let cachePrices = await this.getStompPrices();
 
 			let all = true,

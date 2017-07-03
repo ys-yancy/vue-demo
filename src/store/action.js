@@ -34,7 +34,7 @@ export default {
 	},
 
 	// 订阅报价
-	getStompCurrentPrice( {commit, state} ) {
+	getStompCurrentPrice( {commit, state}, symbols ) {
 		const onmessage_callback = symbolPrice => {
 
 			let params = {
@@ -47,9 +47,9 @@ export default {
           		from: 'stomp',
 			}
 			commit('CHAHESTOMPPRICES', params);
-			commit('STOMPCURRENTPRICE', symbolPrice);
+			// commit('STOMPCURRENTPRICE', symbolPrice);
 		}	
-		symbol.getStompCurrentPrice(onmessage_callback);
+		symbol.getAllStompSymbolsPrices(onmessage_callback);
 	},
 
 }

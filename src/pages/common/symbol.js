@@ -66,18 +66,8 @@ export default {
 
 	},
 
-	_inSymbol: function(data, symbol) {
-	    let inArray = false;
-	    data.forEach((item) => {
-	      if (item.policy.symbol === symbol) {
-	        inArray = true;
-	      }
-	    });
-
-	    return inArray;
-  	},
-
-	getStompCurrentPrice(onmessage_callback) {
+	getSymbolsStompPrice(onmessage_callback, symbols) {
+		this.symbols = symbols || [];
 		this.client && this.client.disconnect();
 		this.onopen = false;
 
@@ -101,17 +91,15 @@ export default {
 
 		const connect_callback = message => {
 			console.log('Stomp连接成功！');
-			// const symbols = this.getOptionSymbols(true);
-			this.getOptionSymbolsAsStomp( (symbols) => {
-				for ( let i = 0; i < symbols.length; i++ ) {
-					Client.subscribe('quote.' + 'real_default.' + symbols[i] +'?format=v2&throttle=1', onmessage)
-				}
-			});
+
+			for ( let i = 0; i < symbols.length; i++ ) {
+				Client.subscribe('quote.' + 'real_default.' + symbols[i] +'?format=v2&throttle=1', onmessage)
+			}
 		}
 
 		const error_callback = err => {
 			console.log('Stomp连接失败！')
-			this.getStompCurrentPrice(onmessage_callback);
+			this.getSymbolsStompPrice(onmessage_callback);
 		}
 
 		F.client && F.client.disconnect();
@@ -122,6 +110,41 @@ export default {
       		this.onopen = true;
       	}
 		this.client = Client;
+	},
+
+	getAllStompSymbolsPrices(onmessage_callback) {
+		let key = this.isDemo() ? 'demoOptionList' : 'optionList';
+    	let token = cookie.get('token');
+    	key = token + key;
+    	let type = this.isDemo() ? 'demo' : 'real';
+    	let d = ['XTIUSD.MICRO', 'XAUUSD.MICRO', 'XAGUSD.MICRO', 'EURUSD.MICRO', 'GBPUSD.MICRO'];
+    	let defaultSymbols = [].concat(d);
+
+    	let symbols = storage.get(key) || [];
+
+    	let mySymbols = storage.get(this._getOptionSymbolListStoragekey());
+
+    	try{
+
+    		symbols = symbols && JSON.parse(symbols);
+      		mySymbols = mySymbols && JSON.parse(mySymbols);
+
+      		parse(symbols);
+      		parse(mySymbols);
+
+      		function parse(symbols) {
+		        if (Array.isArray(symbols)) {
+		          for (let i = 0, len = symbols.length; i < len; i++) {
+		            if (defaultSymbols.indexOf(symbols[i]) === -1) {
+		              defaultSymbols.push(symbols[i])
+		            }
+		          }
+		        }
+		    }
+
+    	}catch(e){}
+
+    	return this.getSymbolsStompPrice(onmessage_callback, defaultSymbols);
 	},
 
 	saveSymbols(symbols) {
@@ -147,16 +170,36 @@ export default {
   		return optionLists;
   	},
 
-  	getOptionSymbolsAsStomp( callback ) {
-  		let self = this;
-  		let optionLists = this._getSelfSymbols();
-  		if ( !optionLists ) {
-			setTimeout( () => {
-				this.getOptionSymbolsAsStomp(callback);
-			}, 500 );
-			return;
+  	add(symbols) {
+  		let newSymbol = false;
+  		let newSymbols = [];
+  		if ( typeof symbols == 'string' ) {
+  			symbols = [symbols];
   		}
-  		callback(optionLists)
+
+  		symbols.forEach( (item, index) => {
+  			if ( this.symbols.indexOf(item) === -1 ) {
+  				this.symbols.push(item);
+  				newSymbol = true;
+				newSymbols.push(item);
+  			}
+  		})
+
+  		if ( newSymbol ) {
+  			this._add(symbols);
+  		}
+
+  	},
+
+  	_inSymbol: function(data, symbol) {
+	    let inArray = false;
+	    data.forEach((item) => {
+	      if (item.policy.symbol === symbol) {
+	        inArray = true;
+	      }
+	    });
+
+	    return inArray;
   	},
 
   	_add(symbols, callback) {
@@ -226,7 +269,7 @@ export default {
 
 	_allIn(symbols) {
 	    let all = true;
-	    let this_symbols = this.getOptionSymbols(true);
+	    let this_symbols = this.getOptionSymbols(true) || [];
 	    this_symbols.forEach((symbol) => {
 	      	if (symbols.indexOf(symbol) === -1) {
 	        	all = false;
@@ -239,8 +282,8 @@ export default {
   	_getSelfSymbols() {
   		let symolKey = this._getOptionSymbolListStoragekey();
   		let optionKey = cookie.get('type') === 'demo' ? 'demoOptionList' : 'optionList';
-  		let mySymbol = JSON.parse(storage.get(symolKey));
-  		let optionSym = JSON.parse(storage.get(`${cookie.get('token')}${optionKey}`));
+  		let mySymbol = JSON.parse(storage.get(symolKey)) || [];
+  		let optionSym = JSON.parse(storage.get(`${cookie.get('token')}${optionKey}`)) || [];
   		optionSym.forEach( (item, index) => {
   			if ( mySymbol.indexOf(item) === -1 ) {
   				mySymbol.push(item)
@@ -254,6 +297,15 @@ export default {
     	let token = cookie.get('token');
     	let key = `${token}:${type}:symbols`;
     	return key;
-  	}
+  	},
+
+  	isDemo() {
+		let type = cookie.get('type');
+		if ( type == 'demo' ) {
+			return true;
+		} else {
+			return false;
+		}
+	},
 
 }
