@@ -141,11 +141,13 @@
 				this.todayPrice.unit = this.unit ? this.unit : 2;
 				this.todayPrice.close = this.yesterdayPrice.close;
 				//  解决首次渲染慢  可以把这里分开， chchePrices阻塞加载
-				this.todayPrice.price = this.cachePrices&&this.cachePrices.bidPrice || chchePrices.bidPrice;
-  				this.up = this.todayPrice.price - this.todayPrice.close > 0 ? true : false;
+				try{
+					this.todayPrice.price = this.cachePrices&&this.cachePrices.bidPrice || chchePrices.bidPrice;
+  					this.up = this.todayPrice.price - this.todayPrice.close > 0 ? true : false;
 
-  				this.updatePriceRatio(this.cachePrices);
-  				
+  					this.updatePriceRatio(this.cachePrices);
+				}catch(e){}
+						
 				this.updateInfoBalContro = setTimeout(()=> {
 					this.getInfoData();
 				}, 10000)

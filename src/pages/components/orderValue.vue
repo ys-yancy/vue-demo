@@ -4,28 +4,28 @@
 			<li class="clearfix item first">
 				<span class="tag">买涨</span>
 				<div class="price-wrapper">
-					<span class="J_FloatProfit">981.15</span>
+					<span class="J_FloatProfit">{{order.profit}}</span>
 					<span class="currency">美元</span>
 				</div>
 			</li>
 			<li class="clearfix item">
 				<div class="desc">
 					<p class="name">交易量（手）：</p>
-					<p>0.32</p>
+					<p>{{order.volume}}</p>
 				</div>
 				<div class="desc">
 					<p class="name">交易利润（$）：</p>
-					<p>-3500.52</p>
+					<p>{{order.profit}}</p>
 				</div>
 			</li>
 			<li class="clearfix item">
 				<div class="desc">
-					<p class="name">交易量（手）：</p>
-					<p>0.32</p>
+					<p class="name">开仓价格 ：</p>
+					<p>{{order.openPrice}}</p>
 				</div>
 				<div class="desc">
-					<p class="name">交易利润（$）：</p>
-					<p>-3500.52</p>
+					<p class="name">手续费（$）：</p>
+					<p>{{order.taxes}}</p>
 				</div>
 			</li>
 		</ul>
@@ -33,39 +33,39 @@
 		<ul v-if='showMore' class="J_list">
 			<li class="clearfix item">
 				<div class="desc">
-					<p class="name">交易量（手）：</p>
-					<p>0.32</p>
+					<p class="name">开仓时间 ：</p>
+					<p>{{order.openTime}}</p>
 				</div>
 				<div class="desc">
-					<p class="name">交易利润（$）：</p>
-					<p>-3500.52</p>
-				</div>
-			</li>
-			<li class="clearfix item">
-				<div class="desc">
-					<p class="name">交易量（手）：</p>
-					<p>0.32</p>
-				</div>
-				<div class="desc">
-					<p class="name">交易利润（$）：</p>
-					<p>-3500.52</p>
+					<p class="name">隔夜利息差 ：</p>
+					<p>{{order.swap}}</p>
 				</div>
 			</li>
 			<li class="clearfix item">
 				<div class="desc">
-					<p class="name">交易量（手）：</p>
-					<p>0.32</p>
+					<p class="name">止盈价格 ：</p>
+					<p>{{order.takeProfit}}</p>
 				</div>
 				<div class="desc">
-					<p class="name">交易利润（$）：</p>
-					<p>-3500.52</p>
+					<p class="name">止损价格 ：</p>
+					<p>{{order.stopLoss}}</p>
+				</div>
+			</li>
+			<li class="clearfix item">
+				<div class="desc">
+					<p class="name">订单号 ：</p>
+					<p>{{order.ticket}}</p>
+				</div>
+				<div class="desc">
+					<p class="name">跟随自 ：</p>
+					<p>{{order.follow_from_ticket}}</p>
 				</div>
 			</li>
 		</ul>
 
 		<div class="submit-wrapper">
 			<div class="base submit">
-				<div class='close-btn'>立即平仓</div>
+				<div class='close-btn' @click='closeOrder'>立即平仓</div>
 				<div class="modif-btn">修改订单</div>
 			</div>
 		</div>
@@ -73,6 +73,7 @@
 		<span class="more" @click.stop='switchMore()'>
 			<span></span>
 		</span>
+		<close-popup :close_params='close_params'></close-popup>
 	</section>
 </template>
 
@@ -187,18 +188,178 @@
 </style>
 
 <script type="text/javascript">
+	import { mapGetters } from 'vuex';
+	import mixins from '../common/accountMixins';
+	import closePopup from '../components/close-popup';
 	export default {
 		name: 'orderValue',
+		mixins: [mixins],
 		data() {
 			return {
+				ticket: '',
+				order: {
+					volume: '--',
+					profit: '--',
+					openPrice: '--',
+					taxes: '--',
+					openTime: '--',
+					swap: '--',
+					takeProfit: '--',
+					stopLoss: '--',
+					ticket: '--',
+					follow_from_ticket: '--',
+					slippage: 10,
+				},
+				prices: {
+					askPrice: '',
+					bidPrice: '',
+				},
 				showMore: false,
+				reContl: null,
 			}
 		},
 
+		computed: {
+			...mapGetters([
+				"getCachePrice"
+			]),
+
+			curSymbol() {
+				const userAccount = this.$store.state.userAccount.account;
+				const curSymbol = this.$store.state.curSymbolInfoData;
+				return this.init(userAccount, curSymbol);	
+			},
+		},
+
 		methods: {
+			init(userAccount, curSymbol) {
+				this._initAttrs();
+				if ( userAccount && curSymbol ) {
+					this.getOrder();
+					// this.cur_symbol = curSymbol;
+					return curSymbol;
+				}		
+			},
+
+			updateProfit(prof) {
+				this.order.profit = parseFloat(prof.mainProfit).toFixed(2);
+				return;
+			},
+
+			async refreshProfit() {
+				if (this.reContl) {
+					clearTimeout(this.reContl);
+				}
+				const account = this.$store.state.userAccount.account;
+				let profitRet = await this.getFloatingProfit(account, [this.order], [this.order.symbol]);
+				this.updateProfit(profitRet);
+
+				this.reContl = setTimeout(() => {
+					this.refreshProfit();
+				}, 1000)
+			},
+
+			getOrder() {
+				this.ajax({
+					url: 'v1/order/' + this.ticket,
+					type: 'GET',
+					data: {
+						access_token: this.cookie.get('token'),
+					}
+				}).then( (order) => {
+					this.order = order.data.data;
+					this.refreshProfit();
+					return this.order;
+				})
+			},
+
+			closeOrder() {
+				// 挂单模式
+				// if (true) {  
+			 	//     return;
+			 	//  }
+			 	// 
+				 
+			 	if (!this.$PB.isDemo()) {
+			 		// realToken = 0
+			 		// this.unwinding(realToken);
+			 	} else {
+			 		this.unwinding(null);
+			 	}
+			},
+
+			unwinding(realToken) {
+				let params = this.getParams(realToken);
+
+				this.ajax({
+					url: '/v1/order/close/' + this.ticket,
+					type: 'POST',
+					data: params,
+				}).then( (res) => {
+					if ( res.data.data.status == 'closed' ) {
+						this.$PB.getCurrentOrderList({}, true);
+					}
+				})
+			},
+
+			getParams(realToken) {
+				let p;
+			    if (this.order.cmd.toLowerCase().indexOf('buy') != -1) {
+			      	p = this.prices.bidPrice;
+			    } else {
+			      	p = this.prices.askPrice;
+			    }
+
+			    let params = {
+			        access_token: this.cookie.get('token'),
+			        slippage: this.order.slippage,
+			        closeprice: p
+			    };
+
+			    if (realToken) {
+      				params.real_token = realToken;
+    			};
+
+    			return params;
+			},
+
+			destroy() {
+				// 回收机制
+				clearTimeout(this.reContl);
+			},
+
 			switchMore() {
 				this.showMore = this.showMore ? false : true;
-			}
+			},
+
+			_initAttrs() {
+				const account = this.$store.state.userAccount.account;
+				this.ticket = this.$route.query.order;
+			},
+		},
+
+		beforeDestroy() {
+			this.destroy();
+		},
+
+		watch: {
+			curSymbol(price) {
+				return price
+			},
+
+			getCachePrice: {
+				handler: function(prices) {
+					let cur_symbol = this.$route.query.symbol,
+						price = prices[cur_symbol];
+					this.prices = price;
+					// this.init(price, cur_symbol);
+				},
+				deep: true,
+			},
+		},
+
+		components: {
+			closePopup,
 		}
 	}
 </script>

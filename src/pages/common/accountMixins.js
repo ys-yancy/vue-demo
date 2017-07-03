@@ -266,7 +266,8 @@ export default {
 		    }
 
 		    let prices = await this.getCurrentPrice(symbols);
-		    let optionList =Symbol.getOptionSymbols();
+
+		    let optionList = await Symbol.get(symbols);
 
 		    try {
 	        	let deferreds = await getProfitList.call(this, optionList, prices, orderList);
@@ -371,6 +372,53 @@ export default {
 		          		return optionList[i];
 		        	}
 		      	}
+		    }
+		},
+
+		/**
+		 * 计算单点价值
+		 */
+		
+		async getPipValue(account, symbolPolicy, prices, type) {
+			let symbol = symbolPolicy.symbol,
+      			current_price = prices,
+      			policy = symbolPolicy;
+
+      		// 如果从服务器没有获得某品种的价格, 那么就单点价值为 $10
+      		if (!current_price) {
+		      	return 10;
+		    }
+
+		    // 品种trading_currency于账户home_currency的报价
+		    let trading_currency = policy.trading_currency;
+		    let trading_home_price = 0;
+		    let pipValue = policy.pip * policy.lot_size;
+
+		    if ( trading_currency == this.account[type].currency ) {
+		    	trading_home_price = 1;
+      			return pipValue;
+		    } else {
+		    	let trading_home_symbol = trading_currency + this.account[type].currency;
+		    	let alg = 0;
+
+		    	if (!Symbols.has(trading_home_symbol)) {
+			        trading_home_symbol = this.account[type].currency + trading_currency;
+			        alg = 1;
+			    }
+
+			    let temp_price = await this.getCurrentPrice(trading_home_symbol, true);
+			    if ( alg == 0 ) {
+			    	trading_home_price = parseFloat(temp_price.bid_price[0]);
+			    	return pipValue * trading_home_price;
+			    } else {
+			    	if (temp_price && temp_price.ask_price) {
+			    		trading_home_price = parseFloat(temp_price.ask_price[0]);
+			    		trading_home_price = 1 / trading_home_price;
+			    		return pipValue * trading_home_price;
+			    	} else {
+			    		return 10;
+			    	}
+			    }
 		    }
 		},
 

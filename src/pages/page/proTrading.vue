@@ -61,7 +61,7 @@
 			this.symbol.sbl = this.params.id = this.$route.query.symbol;
 
 			this.params.symbols = this.symbol.sbl;
-			
+
 			this.$store.dispatch('getCurSymbolInfo',this.params);
 
 			//获取stockList

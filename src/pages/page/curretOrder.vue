@@ -1,7 +1,7 @@
 <template>
 	<div class="current-order">
 		<ul id="J_list" class="list">
-			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.name, symbol: symbol.symbol, page: "order"}}' tag='li' v-for='symbol in order_list' :key='symbol.name' ref='symbolListNode'>
+			<router-link :to='{path: "/proTrading", query: {symbolName: symbol.symbolName, symbol: symbol.symbol, order: symbol.ticket, page: "order"}}' tag='li' v-for='symbol in order_list' :key='symbol.name' ref='symbolListNode'>
 					<div class="symbol_way" :class='{sell: symbol.cmd != "buy"}'>
 						<span></span>
 					</div>
@@ -175,7 +175,7 @@
 
 						if ( profits.length ) {
 							// 如果有盈亏则更新
-							this.order_list[item].profit = profits[tk];
+							this.order_list[item].profit = parseFloat(this.profits[tk]).toFixed(2);
 						}
 					}
 				});
