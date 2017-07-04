@@ -145,6 +145,16 @@
 		},
 
 		methods: {
+			init() {
+				this.getHistoryOrderList();
+			},
+
+			destroy() {
+				this.order_list = null;
+			    this.listdata = null;
+			    this.downdata = null;  
+			},
+
 			async getHistoryOrderList(calBack) {
 				let data = await this.$PB.getHistoryOrderList({page: this.page})
 				data = data.data.data;
@@ -176,11 +186,15 @@
 		},
 
 		created() {
-			this.getHistoryOrderList();
+			this.init();
 		},
 
 		mounted() {
 
+		},
+
+		beforeDestroy() {
+			this.destroy()
 		},
 
 		components: {

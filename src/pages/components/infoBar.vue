@@ -126,6 +126,15 @@
 				}
 			},
 
+			destroy() {
+				// 回收机制
+				clearTimeout(this.updateInfoBalContro);
+				this.cachePrices = null,
+				this.info_data = null;
+				this.todayPrice = null;
+				this.yesterdayPrice = null;
+			},
+
 			async getInfoData(chchePrices) {
 				let cur_symbol = this.getCachePrice;
 				if ( !this.updateInfoBalContro ) {
@@ -213,7 +222,7 @@
 		},
 
 		beforeDestroy() {
-			clearTimeout(this.updateInfoBalContro);
+			this.destroy();
 		},
 
 		watch: {

@@ -40,26 +40,61 @@ export default {
 
 	async getOptionSymbolList() {
 		let demo = this.isDemo();
+		let type = demo ? 'demo' : 'real';
 		let url = demo ? '/v3/demo/symbols6' : '/v3/real/symbols6';
-		const params = {
-			url,
-			type: 'GET',
-			data: {
-				access_token: Cookie.get('token'),
-        		_r: Math.random(),
-			},
+
+		let dataObj = {
+				data: null,
+			}, 
+			ex_time,
+			isExpires;
+			
+		let cacheObj = Storage.get(`${Cookie.get('token')}:${type}:option`);
+			cacheObj = JSON.parse(cacheObj);
+
+		try{
+			let nowTime = Date.now();
+			let cacheTime = cacheObj.expires;
+			isExpires = parseFloat(cacheTime) - parseFloat(nowTime);
+		}catch(e) {
+			isExpires = false;
 		}
 
-		let data = await __.ajax(params);
 
-		data = data.data.data;
+		if ( cacheObj && cacheObj.data.length !== 0  && !!isExpires ) {
+			dataObj.data = cacheObj.data;
+			ex_time = cacheObj.expires;
+		} else {
+			const params = {
+				url,
+				type: 'GET',
+				data: {
+					access_token: Cookie.get('token'),
+	        		_r: Math.random(),
+				},
+			}
+			dataObj.data = await __.ajax(params);
+			dataObj.data = dataObj.data.data.data;
+			ex_time = Date.now() + 1000 * 60 * 60 * 1;
+		}
 
-		let optionSymbolList = [], key = this.isDemo() ? 'demoOptionList' : 'optionList'
-		optionSymbolList = data.map( (item, index) => {
+		let optionSymbolList = [], key = this.isDemo() ? 'demoOptionList' : 'optionList';
+
+		optionSymbolList = dataObj.data.map( (item, index) => {
 			return item.policy.symbol;
 		});
+
+		Object.defineProperty(dataObj, 'expires', {
+			enumerable: true,
+			writable: false,
+			value: ex_time, // option列表缓存一小时
+		})
+
+		Storage.set(`${Cookie.get('token')}:${type}:option`, dataObj);
+
+		// 缓存品种名字  订阅报价用
 		Storage.set(`${Cookie.get('token')}${key}`, optionSymbolList);
-		return data;
+		return dataObj.data;
 	},
 
 	//获取k线图数据

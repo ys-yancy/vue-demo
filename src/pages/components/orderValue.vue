@@ -216,6 +216,10 @@
 				},
 				showMore: false,
 				reContl: null,
+				close_params: {
+					success: false,
+					order: null,
+				},
 			}
 		},
 
@@ -268,6 +272,13 @@
 					}
 				}).then( (order) => {
 					this.order = order.data.data;
+
+					// 判断如果订单已经平仓 ， 则跳转的历史页
+					if ( this.order.closeType.indexOf('None') === -1 ) {
+						this.$router.push({ path: 'historyOrder' })
+						return;
+					}
+
 					this.refreshProfit();
 					return this.order;
 				})
@@ -297,6 +308,11 @@
 					data: params,
 				}).then( (res) => {
 					if ( res.data.data.status == 'closed' ) {
+						this.close_params = {
+							success: true,
+							order: res.data.data,
+						};
+
 						this.$PB.getCurrentOrderList({}, true);
 					}
 				})
@@ -326,6 +342,9 @@
 			destroy() {
 				// 回收机制
 				clearTimeout(this.reContl);
+				this.prices = null;
+				this.close_params = null
+
 			},
 
 			switchMore() {

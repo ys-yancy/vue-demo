@@ -189,6 +189,16 @@
 				this.page = p;
 			},
 
+			destroy() {
+				// 回收机制
+				clearTimeout(this.updateController);
+				this.instance = null;
+				this.chartLastData = null;
+				this.updateController = null;
+				this.pitchActive = null;
+				this.stockSymbolList = null;
+			},
+
 		},
 
 		mounted() {
@@ -211,7 +221,7 @@
 		},
 
 		beforeDestroy() {
-			clearTimeout(this.updateController);
+			this.destroy();
 		},
 
 		watch: {

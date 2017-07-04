@@ -171,6 +171,14 @@
 		},
 
 		methods: {
+			init() {
+				this.$store.dispatch('getUserLimt', {});
+			},
+
+			destroy() {
+				this.Limt = null;
+			},
+
 			setData(index) {
 				const perm = this.setOff(index),
 					  url = this.getUrl(index);
@@ -225,7 +233,11 @@
 		},
 
 		created() {
-			this.$store.dispatch('getUserLimt', {});
+			this.init();
+		},
+
+		beforeDestroy() {
+			this.destroy();
 		},
 
 		computed: {

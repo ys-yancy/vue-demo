@@ -146,6 +146,14 @@
 		},
 
 		methods: {
+			init() {
+				this.getCurrentOrderList();
+			},
+
+			destroy() {
+				this.order_list = null;
+			},
+
 			async getCurrentOrderList() {
 				let data = await this.$PB.getCurrentOrderList({});
 				let list = data.list;
@@ -183,7 +191,6 @@
 		},
 
 		computed: {
-			// 浮动盈亏更新有问题
 			...mapState({
 				profits: state => state.cacheCurOrderProfit,
 				cachePrice: state => state.cacheStompPrices,
@@ -193,10 +200,14 @@
 		},
 
 		created() {
-			this.getCurrentOrderList();
+			this.init();
 		},
 
 		mounted() {
+		},
+
+		beforeDestroy() {
+			this.destroy();
 		},
 
 		watch: {

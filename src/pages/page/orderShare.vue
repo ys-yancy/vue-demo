@@ -265,6 +265,19 @@
 		mixins: [myMixinAreaChart],
 
 		methods: {
+			init() {
+				this._initParams();
+				this.getOrderTicketList();
+				this.getAreaChartSymbolList();
+			},
+
+			destroy() {
+				this.routeParams = null;
+				this.ticketParams = null;
+				this.chartLastData = null;
+				this.symbolPriceList = null;
+			},
+
 			async getOrderTicketList() {
 				let params = {
 					url: 'v1/order/' + this.routeParams.order,
@@ -320,12 +333,18 @@
 
 				return this.symbolPriceList;
 			},
+
+			_initParams() {
+				this.routeParams = this.$route.query;
+			},
 		},
 
 		created() {
-			this.routeParams = this.$route.query;
-			this.getOrderTicketList();
-			this.getAreaChartSymbolList();
+			this.init();
+		},
+
+		beforeDestroy() {
+			this.destroy();
 		},
 
 		computed: {

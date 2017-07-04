@@ -48,38 +48,33 @@
 		},
 
 		methods: {
+			init() {
+				this._initAttrs();
+				this.$store.dispatch('getCurSymbolInfo',this.params);
+			},
 
+			destroy() {
+				this.symbol = null;
+				this.params = null;
+			},
+
+			_initAttrs() {
+				this.symbol.name = this.$route.query.symbolName;
+				this.symbol.sbl = this.params.id = this.$route.query.symbol;
+				this.params.symbols = this.symbol.sbl;
+			},
 		},
 
 		mounted() {
-			// this.getSymbol();
+			
 		},
 
 		created() {
-
-			this.symbol.name = this.$route.query.symbolName;
-			this.symbol.sbl = this.params.id = this.$route.query.symbol;
-
-			this.params.symbols = this.symbol.sbl;
-
-			this.$store.dispatch('getCurSymbolInfo',this.params);
-
-			//获取stockList
-			// this.$store.dispatch('getStockSymbolList', this.params);
+			this.init();
 		},
 
-		computed: {
-			// stockList() {
-			// 	const stockListPrice = this.$store.state.stockSymbolList.price;
-
-			// 	// this.stockSymbolList.price = stockListPrice;
-			// }
-		},
-
-		watch: {
-			// curSymbolInfo() {
-
-			// }
+		beforeDestroy() {
+			this.destroy();
 		},
 
 		components: {

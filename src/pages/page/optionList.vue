@@ -235,6 +235,10 @@
 				this.renderOptionLists();
 			},
 
+			destroy() {
+				this.symbol_list = null;
+			},
+
 			swipeStart(e) {
 				this.startX = e.targetTouches[0].pageX;
 				this.startY = e.targetTouches[0].pageY;
@@ -322,6 +326,10 @@
 
 		created() {
 			this.init();
+		},
+
+		beforeDestroy() {
+			this.destroy();
 		},
 
 		computed: {

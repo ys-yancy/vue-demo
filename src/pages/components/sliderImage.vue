@@ -100,6 +100,16 @@
 		},
 
 		methods: {
+			init() {
+				this.sliderImg();
+				this.sliderWrapperStyle.width = 16 * 3 + 'rem';
+			},
+
+			destroy() {
+				this.clearSlider();
+				this.sliderWrapperStyle = null;
+			},
+
 			...mapMutations([
 				'SLIDERCONTROLLER',
 			]),
@@ -140,12 +150,11 @@
 		},
 
 		created() {
-			this.sliderImg();
-			this.sliderWrapperStyle.width = 16 * 3 + 'rem';
+			this.init();
 		},
 
 		beforeDestroy() {
-			this.clearSlider();
+			this.destroy();
 		},
 
 		watch: {  

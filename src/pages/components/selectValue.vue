@@ -398,6 +398,13 @@
 				}		
 			},
 
+			destroy() {
+				// 回收机制
+				this.symbol_status = null;
+				this.isClose = null;
+				this.order_params = null;
+			},
+
 			set_volume(add) {
 				this.step = parseFloat(this.step);
 
@@ -658,6 +665,10 @@
 
 		created() {
 			
+		},
+
+		beforeDestroy() {
+			this.destroy();
 		},
 
 		watch: {

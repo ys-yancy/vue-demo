@@ -4,6 +4,7 @@ import io from '../../service/IO';
 import F from '../lib/frame';
 
 export default {
+	// 以后优化缓存到本地
 	cacheSymbols: {
 		demo: {},
 		real: {},

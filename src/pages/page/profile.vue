@@ -186,6 +186,14 @@
 		},
 
 		methods: {
+			init() {
+				this.getUserInfo();
+			},
+
+			destroy() {
+				this.userInfoData = null;
+			},
+
 			async getUserInfo() {
 				let info = await this.ajax({
 					url: 'v1/user/profile/info?',
@@ -205,7 +213,11 @@
 		},
 
 		created() {
-			this.getUserInfo();
+			this.init();
+		},
+
+		beforeDestroy() {
+			this.destroy();
 		},
 
 		computed: {
