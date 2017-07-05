@@ -15,32 +15,9 @@
 		<span class="transition-l"></span>
 		<span></span>
 
-		<div v-if='page == "option" || "proTrading"' class="item-wrapper">
-			<ul :class='{pro: bg_color}'>
-				<li>
-					<p class="J_FreeMargin">{{ freeMargin }}</p>
-					<p class="desc">可用保证金($)</p>
-				</li>
-				<li>
-					<p class="J_NetDeposit">{{ netDeposit }}</p>
-					<p class="desc">账户净值($)</p>
-				</li>
-				<li>
-					<p class="J_FloatProfit">{{ profit }}</p>
-					<p class="desc">浮动盈亏($)</p>
-				</li>
-				<li>
-					<p class="J_Rate">{{ rate }}</p>
-					<p class="desc">保证金比例(%)</p>
-				</li>
-				<li>
-					<p class="J_Bonus">{{ bonus }}</p>
-					<p class="desc">保证金增金($)</p>
-				</li>
-			</ul>
-		</div>
+		
 
-		<div v-else-if='page == "curretOrder"' class="item-wrapper">
+		<div v-if='page == "curretOrder"' class="item-wrapper">
 			<ul :class='{pro: bg_color}'>
 				<li>
 					<p class="J_FloatProfit">{{ profit }}</p>
@@ -82,6 +59,31 @@
 				<li>
 					<p class="J_NetDeposit">{{ netDeposit }}</p>
 					<p class="desc">账户净值($)</p>
+				</li>
+			</ul>
+		</div>
+
+		<div v-else class="item-wrapper">
+			<ul :class='{pro: bg_color}'>
+				<li>
+					<p class="J_FreeMargin">{{ freeMargin }}</p>
+					<p class="desc">可用保证金($)</p>
+				</li>
+				<li>
+					<p class="J_NetDeposit">{{ netDeposit }}</p>
+					<p class="desc">账户净值($)</p>
+				</li>
+				<li>
+					<p class="J_FloatProfit">{{ profit }}</p>
+					<p class="desc">浮动盈亏($)</p>
+				</li>
+				<li>
+					<p class="J_Rate">{{ rate }}</p>
+					<p class="desc">保证金比例(%)</p>
+				</li>
+				<li>
+					<p class="J_Bonus">{{ bonus }}</p>
+					<p class="desc">保证金增金($)</p>
 				</li>
 			</ul>
 		</div>
@@ -319,10 +321,10 @@
 				this._refreshAccount(account, orderList, prices, profit, floatOption);
 
 				if ( !isHasList ) return;
-		        // 待优化
+		       
 		        this.refreshComteoller = setTimeout(() => {
 		        	this.refreshAccount()
-		        }, 2000)
+		        }, this.$config.getAccountUpdateTime())
 			},
 
 			async refreshHistoryAccount() {

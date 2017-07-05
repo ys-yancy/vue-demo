@@ -8,7 +8,6 @@ import cookie from '../pages/lib/cookie'
 Vue.use(Vuex);
 
 const state = {
-	symbolCurrentPrice: null, //  目前还有地反用到 之后全用cacheStompPrices
 	curSymbolInfoData: '',
 	userAccount: '',
 	isLogin: '',

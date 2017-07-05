@@ -159,7 +159,7 @@
 						
 				this.updateInfoBalContro = setTimeout(()=> {
 					this.getInfoData();
-				}, 10000)
+				}, this.$config.getInfoBarUpdateTime())
 			},
 
 			updateInfoBar(prices) {

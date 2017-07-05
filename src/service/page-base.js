@@ -1,4 +1,5 @@
 import __ from './IO';
+import config from '../pages/config/config';
 import Cookie from '../pages/lib/cookie';
 import Util from '../pages/common/util';
 import Storage from '../pages/common/storage';
@@ -48,7 +49,7 @@ export default {
 			}, 
 			ex_time,
 			isExpires;
-			
+
 		let cacheObj = Storage.get(`${Cookie.get('token')}:${type}:option`);
 			cacheObj = JSON.parse(cacheObj);
 
@@ -75,7 +76,7 @@ export default {
 			}
 			dataObj.data = await __.ajax(params);
 			dataObj.data = dataObj.data.data.data;
-			ex_time = Date.now() + 1000 * 60 * 60 * 1;
+			ex_time = Date.now() + config.getOptinListCacheTime();
 		}
 
 		let optionSymbolList = [], key = this.isDemo() ? 'demoOptionList' : 'optionList';
@@ -203,10 +204,11 @@ export default {
 	        margin: margin,
 	        profit: profit,
 		};
+
 		Object.defineProperty(cacheorderList, 'exp', {
 			enumerable: true,
 			writable: false,
-			value: Date.now() + 1000 * 30
+			value: Date.now() + config.getOrderListCacheTime(),
 		})
 		Storage.set(key, cacheorderList);
 		return cacheorderList;

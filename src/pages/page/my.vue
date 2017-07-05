@@ -9,14 +9,14 @@
 				</div>
 			</div>
 			<div class="detail-wrapper">
-				<p class="name">ys</p>
+				<p class="name">{{userAccount.nickname}}</p>
 				<p class="">
 					<span>手机号:</span>
-					<span class="J_Phone">13693544218</span>
+					<span class="J_Phone">{{userAccount.phone}}</span>
 				</p>
 				<p>
 					<span>邀请码:</span>
-					<span class="J_InviteCode">yh3332</span>
+					<span class="J_InviteCode">{{userAccount.invite_code}}</span>
 				</p>
 			</div>
 		</router-link>
@@ -74,7 +74,7 @@
 		</ul>
 
 		<div class="btn">
-			<span>退出</span>
+			<span @click='logout'>退出</span>
 		</div>
 		<my-footer></my-footer>
 	</div>
@@ -211,6 +211,30 @@
 		data() {
 			return {
 
+			}
+		},
+
+		methods: {
+			logout() {
+				this.detroyCookie();
+				this.locaLogin();
+			},
+
+			detroyCookie() {
+				this.cookie.expire('real_token');
+	      		this.cookie.expire('phone');
+	      		// 保留登录状态
+	      		// this.cookie.expire('goType');
+	      		// this.cookie.expire('type');
+	      		this.cookie.expire('uuid');
+	      		this.cookie.expire('inviteCode');
+	      		this.cookie.expire('token');
+	      		this.cookie.expire('wl');
+	      		this.cookie.expire('referCode');
+			},
+
+			locaLogin() {
+				this.$router.push({path: 'login'});
 			}
 		},
 

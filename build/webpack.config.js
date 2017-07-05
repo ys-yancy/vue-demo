@@ -9,7 +9,11 @@ module.exports = {
         // path.resolve([from ...], to) 将to参数解析为绝对路径
         index:path.resolve(__dirname, '../src/entry/main.js'),
         // 需要被提取为公共模块的群组
-        vendors:['vue','vue-router','webpack-zepto'],
+        vendors:['vue','vue-router','vuex'],
+
+        // 单独的插件机配置文件
+        myplug: path.resolve(__dirname, '../src/pages/resources/r.js'),
+
     },
 
     // 输出配置

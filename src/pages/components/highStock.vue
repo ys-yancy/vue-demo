@@ -157,7 +157,7 @@
 
 				this.updateController = setTimeout( () => {
 					this.updateChart();
-				}, 500 )
+				}, this.$config.getCandleUpdateTime())
 			},
 
 			_updateChart(cur_symbol, price) {

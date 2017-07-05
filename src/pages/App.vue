@@ -97,7 +97,28 @@
 	export default {
 		name: 'app',
 		methods: {
+			isConnectStomp(to, from) {
+				let isConnentStomp = to.meta.requireStomp;
+				let isConnect = this.$store.state.isConnectStompSuccess;
+
+				isConnentStomp&&!isConnect&&this.connect_stomp();
+			},
+
+			isGetAccount() {
+				/**
+				 * 这里有一个bug：
+				 * 手动改地址栏链接将不会触发created
+				 */
+				let hs = window.location.hash;
+				let isLogin = this.isLogin(hs);
+
+				console.log('isLogin:' + isLogin);
+
+				!isLogin&&this.$store.dispatch('getAccount');
+			},
+
 			connect_stomp() {
+				console.log('start: connect: stomp')
 				this.$store.dispatch('getStompCurrentPrice');
 				setTimeout( () => {
 					let isConnect = this.$store.state.isConnectStompSuccess;
@@ -105,20 +126,25 @@
 						this.connect_stomp();
 					}
 				}, 2000)
+			},
+
+			isLogin(path) {
+				if ( path == '#/' || path.indexOf('#/login') !== -1 ) {
+					return true;
+				} else {
+					return false;
+				}
 			}
 		},
 		mounted() {
 			console.log('App挂在完毕！');
 		},
 		created() {
-			this.$store.dispatch('getAccount');		
+			this.isGetAccount()
 		},
 		watch: {
 			$route(to, from) {
-				let isConnentStomp = to.meta.requireStomp,
-					isConnect = this.$store.state.isConnectStompSuccess;
-
-				isConnentStomp&&!isConnect&&this.connect_stomp();
+				this.isConnectStomp(to, from);
 			}
 		}
 	}

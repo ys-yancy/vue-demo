@@ -170,8 +170,7 @@
 		mounted() {
 			this.$nextTick(function() {
 				this.$_sticky({el: '.nav-list'});
-			})
-			
+			})	
 		},
 
 		components: {

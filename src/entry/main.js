@@ -2,6 +2,7 @@ import Vue from 'vue';
 import App from '../pages/App';
 import router from '../router/router';
 import store from '../store/index';
+import conf from '../pages/config/config';
 import IO from '../service/IO';
 import Cookie from '../pages/lib/cookie';
 import VueTouch from 'vue-touch';
@@ -18,6 +19,10 @@ Vue.prototype.ajax = IO.ajax;
 Vue.prototype.errorMessage = IO.errorMessage;
 
 Vue.prototype.cookie = Cookie;
+
+Object.defineProperty(Vue.prototype, '$config', {
+    value: conf,
+})
 
 Object.defineProperty(Vue.prototype, '$PB',{
     value: pageBase,

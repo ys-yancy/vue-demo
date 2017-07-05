@@ -86,7 +86,7 @@ config.plugins = [
         // 源文件，路径相对于本文件所在的位置
         template: path.resolve(__dirname, '../src/pages/index.html'),
         // 需要引入entry里面的哪几个入口，如果entry里有公共模块，记住一定要引入
-        chunks: ['vendors','index'],
+        chunks: ['myplug','vendors','index'],
         // 要把<script>标签插入到页面哪个标签里(body|true|head|false)
         inject: 'body',
         // 生成html文件的标题

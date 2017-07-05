@@ -47,7 +47,6 @@ export default {
           		from: 'stomp',
 			}
 			commit('CHAHESTOMPPRICES', params);
-			// commit('STOMPCURRENTPRICE', symbolPrice);
 		}	
 		symbol.getAllStompSymbolsPrices(onmessage_callback);
 	},

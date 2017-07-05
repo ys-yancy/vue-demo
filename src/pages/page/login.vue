@@ -103,10 +103,6 @@
 
 						this.$store.dispatch('getAccount', true);
 
-						this.$store.dispatch('getOptionList', {
-							access_token: data.data.data.token,
-						});
-
 						this.$router.push({ path: 'option' });
 					}
 				})
