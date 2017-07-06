@@ -1,7 +1,7 @@
 <template>
 	<div class="friend-wrapper">
 		<my-header page-title='朋友赚 我也赚'>
-			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> < </span>
+			<span slot='icon-logo' class='go-back item-back' @click='$router.go(-1)'></span>
 		</my-header>
 		<div class="info-no">
 			<h2>除了做交易 邀请好友也能赚钱</h2>

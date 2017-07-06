@@ -1,7 +1,7 @@
 <template>
 	<div class="profile-wrapper-outer">
 		<my-header page-title='个人资料'>
-			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> < </span>
+			<span slot='icon-logo' class='go-back item-back' @click='$router.go(-1)'></span>
 		</my-header>
 		<section class="info">
 			<div class="img-wrapper-outer">

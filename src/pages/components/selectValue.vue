@@ -63,11 +63,11 @@
 			<div v-if='isClose != null && !isClose' class="base submit">
 				<div class="sell" :class='{ guandan: isGuadan }' @click='action(false)'>
 					<p class="bid-price">{{ sell_price }}</p>
-					{{ isGuadan ? '挂单买跌' : '买跌' }}
+					<span class="desc">{{ isGuadan ? '挂单买跌' : '买跌' }}</span>
 				</div>
 				<div class="buy" :class='{ guandan: isGuadan }' @click='action(true)'>
 					<p class="ask-price">{{ buy_price }}</p>
-					{{ isGuadan ? '挂单买涨' : '买涨' }}
+					<span class="desc">{{ isGuadan ? '挂单买涨' : '买涨' }}</span>
 				</div>
 			</div>
 
@@ -287,11 +287,14 @@
 			&.submit>div{
 				display: inline-block;
 				.width(220);
-				.height(98);
+				.height(90);
 				text-align: center;
 				.border-radius(7);
 				.border-bottom(5, solid, #1c5e5d);
 				background-color: #25B9A8;
+				.desc{
+					.font-size(24);
+				}
 				p{
 					.height(40);
 					.line-height(40);
@@ -447,8 +450,13 @@
 			},
 
 			async changeDefaultVolume(volume) {
+				if ( volume.maxVolume > 0 && volume.volume <= 0 ) {
+					let symbol = this.get_user_account_openprices('symbol');
+					this.value = symbol.policy.min_vol || 0.01;
+				} else {
+					this.value = parseFloat(volume.volume);
+				}
 
-				this.value = parseFloat(volume.volume);
 				this.maxValume = parseFloat(volume.maxVolume);
 
 				let getMarginCallback = this._getMargin();

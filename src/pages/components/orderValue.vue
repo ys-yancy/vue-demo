@@ -146,24 +146,24 @@
 			background: #160e23;
 			.base{
 				div{
-					.width(210);
+					.width(240);
 					background: red;
 					text-align: center;
-					.line-height(65);
+					.line-height(68);
 					background: #7688ba;
 					color: #fff;
-					.font-size(30);
+					.font-size(28);
 					.border-radius(8);
-					.border-bottom(3, solid, #5a6ba1);
 					&.close-btn{
 						position: absolute;
 						.left(50);
+						.border-bottom(5, solid, #5a6ba1);
 					}
 					&.modif-btn{
 						position: absolute;
 						.right(50);
 						background-color: #967bdc;
-						.border-bottom(3, solid, #6b4fb5);
+						.border-bottom(5, solid, #6b4fb5);
 					}
 				}	
 			}

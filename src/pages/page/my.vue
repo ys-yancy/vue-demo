@@ -59,14 +59,14 @@
 				</span>
 				<span class="arrow-right"></span>
 			</li>
-			<li>
-				<a href="http://weixin.invhero.com/help" class="system_notice">
+			<li v-if='useHelpUrl'>
+				<a :href="useHelpUrl" class="system_notice">
 					<span>使用帮助</span>
 				</a>
 				<span class="arrow-right"></span>
 			</li>
 			<li>
-				<span  class="system_notice">
+				<span class="system_notice">
 					<span>关于我们</span>
 				</span>
 				<span class="arrow-right"></span>
@@ -210,7 +210,7 @@
 		name: 'my',
 		data() {
 			return {
-
+				useHelpUrl: getHelpLink(),
 			}
 		},
 
@@ -241,7 +241,7 @@
 		computed: {
 			userAccount() {
 				return this.$store.state.userAccount;
-			}
+			},
 		},
 
 		components: {

@@ -1,7 +1,7 @@
 <template>
 	<div class="new-trade">
 		<my-header :page-title='pageTitle'>
-			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> < </span>
+			<span slot='icon-logo' class='go-back item-back' @click='$router.go(-1)'></span>
 		</my-header>
 		<nav class="nav-wrapper">
 			<ul class="nav-list clearfix">

@@ -1,7 +1,7 @@
 <template>
 	<div class="account-wrapper">
 		<my-header page-title='我的账户'>
-			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> < </span>
+			<span slot='icon-logo' class='go-back item-back' @click='$router.go(-1)'></span>
 			<span slot='right-icon' class="pocket clearfix">记账簿</span>
 		</my-header>
 		<section class="account">

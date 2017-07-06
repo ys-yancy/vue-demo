@@ -1,7 +1,7 @@
 <template>
 	<div class="timeline">
 		<my-header page-title='投资圈'>
-			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> < </span>
+			<span slot='icon-logo' class='go-back item-back' @click='$router.go(-1)'></span>
 		</my-header>
 		<div class="self-wrapper">
 			<div class="info-wrapper">

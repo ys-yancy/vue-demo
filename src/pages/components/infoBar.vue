@@ -140,6 +140,7 @@
 				if ( !this.updateInfoBalContro ) {
 					clearTimeout(this.updateInfoBalContro)
 				}
+
 				let prices = await this.getPrices();
 					prices = prices.slice(prices.length - 2);
 
@@ -155,7 +156,9 @@
   					this.up = this.todayPrice.price - this.todayPrice.close > 0 ? true : false;
 
   					this.updatePriceRatio(this.cachePrices);
-				}catch(e){}
+				}catch(e){
+					this.getInfoData();
+				}
 						
 				this.updateInfoBalContro = setTimeout(()=> {
 					this.getInfoData();

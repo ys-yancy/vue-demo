@@ -88,7 +88,7 @@ export default {
 		Object.defineProperty(dataObj, 'expires', {
 			enumerable: true,
 			writable: false,
-			value: ex_time, // option列表缓存一小时
+			value: Date.now() + ex_time, // option列表缓存一小时
 		})
 
 		Storage.set(`${Cookie.get('token')}:${type}:option`, dataObj);

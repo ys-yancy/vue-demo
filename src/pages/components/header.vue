@@ -32,15 +32,21 @@
 		}
 		.go-back{
 			position: absolute;
-			float: left;
+			display: inline-block;	
+			.top(20);
+			.left(20);
+			&.item-back{
+				.width(50);
+				.height(50);
+				background: url(../img/bg-icon.png) no-repeat 0 0;
+				.background-size(400, 1500);
+				.background-position(0, -435);
+			}
 		}
 		.right-icon{
 			position: absolute;
 			.top(0);
 			.right(20);
-			display: inline-block;
-			float: right;
-			text-decoration: none;
 		}
 	}
 </style>

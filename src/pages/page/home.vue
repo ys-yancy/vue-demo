@@ -1,7 +1,7 @@
 <template>
 	<div class="transactionPage">
 		<my-header page-title='交易'>
-			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> 使用帮助 </span>
+			<a v-if='userHelp' tag='span' slot='icon-logo' class='go-back' :href='userHelp'> 使用帮助 </a>
 			<div slot='right-icon' class="right-icon">
 				<span class="add-icon" @click.prevent.stop='addClicked'> + </span>
 			</div>
@@ -48,7 +48,6 @@
 				.width(115);
 				.height(36);
 				.line-height(36);
-				.margin-top(23);
 				color: #fff;
 				.font-size(22);
 				.border(1, solid, #fff);
@@ -139,6 +138,7 @@
 				stompBody: '',
 				exchangeCode: false,
 				isShortcutShow: false,
+				userHelp: getHelpLink(),
 			}
 		},
 

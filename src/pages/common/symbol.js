@@ -16,7 +16,9 @@ export default {
 	},
 
 	async get( symbols ) {
-
+		if ( typeof symbols == 'string' ) {
+			symbols = [symbols];
+		}
 		let optionList = this._get(symbols);
 
 		//如果存在缓存直接读取
@@ -62,6 +64,7 @@ export default {
           	});
 
 		    this.saveSymbols(data);
+
 			return data;
 		}
 

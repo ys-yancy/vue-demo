@@ -1,7 +1,7 @@
 <template>
 	<div class="order-share">
 		<my-header page-title='交易'>
-			<span slot='icon-logo' class='go-back' @click='$router.go(-1)'> < </span>
+			<span slot='icon-logo' class='go-back item-back' @click='$router.go(-1)'></span>
 		</my-header>
 		<section class="content">
 			<div class="container-hd">

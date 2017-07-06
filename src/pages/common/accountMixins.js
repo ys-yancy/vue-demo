@@ -133,7 +133,7 @@ export default {
 		},
 
 		/**
-		 * 计算默认交易量, 使用可用保证金的50%算
+		 * 计算默认交易量, 使用可用保证金的10%算
 		 */	
 		async calVolume(symbol, account, preparedMargin) {
 			// let account = this.isDemo() ? account.demo : account.real;
